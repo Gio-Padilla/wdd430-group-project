@@ -2,6 +2,7 @@ Giovaughni Padilla
 Pedro Alves de Moura
 Emmanuel Ohene Kwadwo Jnr Kwakye
 Travis Abuton
+Imelda Lucia Robles Fuentel
 
 Website name: Handcrafted Haven
 
@@ -22,8 +23,10 @@ Roboto: For small and easy to read text
 https://fonts.google.com/specimen/Roboto
 
 General layout:
+Added as a photo to the repository called wireframe
 
 Graphical elements of the project:
+Added a logo idea to the repository as a graphical element
 
 # **Project Overview**
 
