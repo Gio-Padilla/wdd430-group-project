@@ -1,26 +1,63 @@
 @import "tailwindcss";
 
+/* =========================
+   DESIGN TOKENS
+========================= */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --primary: #2F4F4F;
+  --background: #DCDCDC;
+  --accent: #F26419;
+  --outline: #000000;
+  --blue: #2176FF;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* =========================
+   BASE LAYOUT
+========================= */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--outline);
+}
+
+/* =========================
+   TYPOGRAPHY (SAFE VERSION)
+   IMPORTANT: no forced text color here
+========================= */
+
+h1, h2, h3 {
+  font-family: var(--font-title);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0;
+}
+
+p, a, span, li {
+  font-family: var(--font-body);
+}
+
+small {
+  font-family: var(--font-small);
+}
+
+/* =========================
+   FORM ELEMENTS (optional safety)
+========================= */
+
+input, button, textarea {
+  font-family: var(--font-body);
+}
+
+/* =========================
+   IMPORTANT FIX
+   (prevents inheritance bugs)
+========================= */
+
+* {
+  box-sizing: border-box;
 }
