@@ -1,3 +1,13 @@
+Pedro Alves de Moura
+
+Emmanuel Ohene Kwadwo Jnr Kwakye
+
+Travis Abuton
+
+Imelda Lucia Robles Fuentel
+
+Giovaughni Padilla
+
 Run the following to view the page locally
 
 pnpm dev
