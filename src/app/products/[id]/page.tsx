@@ -2,16 +2,17 @@ import Image from "next/image"
 import { products } from "@/data/products"
 
 type Props = {
-    params: {
+    params: Promise<{
         id: string
-    }
+    }>
 }
 
 
-export default function ProductDetailPage({ params }: Props) {
+export default async function ProductDetailPage({ params }: Props) {
+    const { id } = await params;
 
     const product = products.find(
-        (p) => p.id === Number(params.id)
+        (p) => p.id === Number(id)
     )
 
     if (!product) {
