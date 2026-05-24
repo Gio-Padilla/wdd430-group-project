@@ -3,8 +3,8 @@ import { Aladin, Quicksand, Roboto } from "next/font/google";
 
 import "./globals.css";
 
-import Header from "@/components/base/header";
-import Footer from "@/components/base/footer";
+import Header from "@/components/ui/Header";
+import Footer from "@/components/ui/Footer";
 
 const aladin = Aladin({
   subsets: ["latin"],
@@ -25,7 +25,15 @@ const roboto = Roboto({
 
 export const metadata: Metadata = {
   title: "Handcrafted Haven",
-  description: "Handmade Goods & Artisan Creations",
+  description: "Discover unique handmade products from talented artisans. Handcrafted Haven connects creators with customers who value sustainable, one-of-a-kind goods.",
+  keywords: "handmade, artisan crafts, unique gifts, sustainable products, local makers, handcrafted haven",
+  icons: {
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+    ],
+  },
 };
 
 export default function RootLayout({
