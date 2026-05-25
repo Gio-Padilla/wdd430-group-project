@@ -7,7 +7,6 @@ type Props = {
     }>
 }
 
-
 export default async function ProductDetailPage({ params }: Props) {
     const { id } = await params;
 
@@ -33,6 +32,7 @@ export default async function ProductDetailPage({ params }: Props) {
                         src={product.image}
                         alt={product.title}
                         fill
+                        sizes="(max-width: 768px) 100vw, 50vw"
                         className="object-contain"
                     />
                 </div>
