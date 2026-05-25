@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+
+/* Since were using tailwind I added some of the utilitiy classes we can just reference it directly*/
+@theme{
+  --color-primary: #2F4F4F;
+  --color-background: #DCDCDC;
+  --color-accent: #F26419;
+  --color-outline: #000000;
+  --color-blue: #2176FF;
+}
+
 /* =========================
    DESIGN TOKENS
 ========================= */
