@@ -36,7 +36,8 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`
+      data-scroll-behavior="smooth"
+       className={`
         ${aladin.variable}
         ${quicksand.variable}
         ${roboto.variable}

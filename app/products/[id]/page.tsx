@@ -1,17 +1,22 @@
 import Image from "next/image"
 import { products } from "@/data/products"
+import ReviewSection from "@/components/StarRating"
+
 
 type Props = {
-    params: {
+    params: Promise<{
         id: string
-    }
+    }>
 }
 
+export default async function ProductDetailPage({
+    params,
+}: Props) {
 
-export default function ProductDetailPage({ params }: Props) {
+    const { id } = await params
 
     const product = products.find(
-        (p) => p.id === Number(params.id)
+        (p) => p.id === Number(id)
     )
 
     if (!product) {
@@ -32,6 +37,7 @@ export default function ProductDetailPage({ params }: Props) {
                         src={product.image}
                         alt={product.title}
                         fill
+                        sizes="(max-width: 768px) 100vw, 50vw"
                         className="object-contain"
                     />
                 </div>
@@ -40,6 +46,10 @@ export default function ProductDetailPage({ params }: Props) {
                     <h1 className="text-4xl font-bold mb-4">
                         {product.title}
                     </h1>
+
+                    <p className="text-gray-500 font-medium mb-4">
+                        by {product.seller}
+                    </p>
 
                     <p className="text-gray-600 mb-6">
                         {product.description}
@@ -51,6 +61,8 @@ export default function ProductDetailPage({ params }: Props) {
                 </div>
 
             </div>
+
+            <ReviewSection />
 
         </main>
     )
