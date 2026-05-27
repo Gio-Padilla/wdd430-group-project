@@ -14,12 +14,12 @@ export default function SignInCard() {
     }
 
     return (
-        <div className="w-full p-7 flex flex-col gap-4">
+        <div className="w-full p-2 flex flex-col gap-4">
             <div>
                 <h2 className="text-md">Sign In</h2>
                 <p className="text-sm font-light">Enter your credentials to continue</p>
             </div>
-            <form className="text-sm flex p-10 flex-col gap-6 w-full" onSubmit={(e) => handleLogin(e)}>
+            <form className="text-sm flex p-4 flex-col gap-6 w-full" onSubmit={(e) => handleLogin(e)}>
                 <div className="grid gap-1">
                     <label htmlFor="email">EMAIL</label>
                     <input
@@ -50,7 +50,7 @@ export default function SignInCard() {
                 </div>
                 <input type="submit" value="Sign In" className="bg-primary text-background hover:bg-primary/90 px-4 py-2 rounded-md" />
             </form>
-            {/* forgot password */}\
+            {/* forgot password */}
             <div className="text-sm text-center">
                 <a href="#" className="text-primary hover:underline">
                     Forgot your password?

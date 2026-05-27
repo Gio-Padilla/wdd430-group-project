@@ -3,7 +3,18 @@ import SignInCTA from "@/components/ui/SignInCTA";
 
 export default function AccountPage() {
     return (
-        <div className="w-full bg-background grid place-items-center grid-cols-2 p-5">
+        <div
+            className="
+                flex
+                flex-col
+                items-center
+                justify-center
+                gap-6
+                bg-background
+                p-5
+                md:flex-row
+            "
+        >
             <SignInCard />
             <SignInCTA />
         </div>
