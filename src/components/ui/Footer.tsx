@@ -49,7 +49,7 @@ export default function Footer() {
             <input
               type="email"
               placeholder="Email address"
-              className="rounded border-2 border-black px-3 py-2 text-black"
+              className="rounded border-2 border-black px-3 py-2 text-white"
             />
 
             <button
