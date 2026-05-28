@@ -1,13 +1,33 @@
 import Image from "next/image";
 import Link from "next/link";
+import { User, ShoppingCart } from "lucide-react";
 import MobileMenu from "@/components/ui/MobileMenu";
+import UserMenu from "@/components/ui/UserMenu";
+import DesktopNav from "@/components/ui/DesktopNav";
+import { auth } from "@/auth";
 
-export default function Header() {
-  const navLinks = [
+export default async function Header() {
+  const session = await auth();
+  const desktopNavLinks = [
+    { name: "Home", href: "/" },
+    { name: "Products", href: "/products" },
+    { 
+      name: "About", 
+      href: "/about",
+      subLinks: [
+        { name: "Contact", href: "/contact" },
+        { name: "Sellers", href: "/sellers" }
+      ]
+    },
+  ];
+
+  const mobileNavLinks = [
     { name: "Home", href: "/" },
     { name: "Products", href: "/products" },
     { name: "About", href: "/about" },
     { name: "Contact", href: "/contact" },
+    { name: "Sellers", href: "/sellers" },
+    { name: "Cart", href: "/cart" },
   ];
 
   return (
@@ -18,7 +38,7 @@ export default function Header() {
         <div className="flex items-center justify-between w-full md:w-auto">
           <Link href="/" className="flex items-center gap-3">
             <Image
-              src="/logo-idea-1.png"
+              src="/logo-idea-1.webp"
               width={80}
               height={80}
               alt="Handcrafted Haven Logo"
@@ -35,31 +55,28 @@ export default function Header() {
             </div>
           </Link>
 
-          {/* Pass navigation links down to the Client Component */}
-          <MobileMenu navLinks={navLinks} />
+          {/* Pass mobile navigation links and user down to the Client Component */}
+          <MobileMenu navLinks={mobileNavLinks} user={session?.user} />
         </div>
 
         {/* Desktop Navigation Links */}
-        <nav className="hidden md:flex flex-wrap justify-center gap-3">
-          {navLinks.map((link) => (
-            <Link
-              key={link.name}
-              href={link.href}
-              className="rounded px-3 py-1 font-semibold text-[#2F4F4F] transition hover:bg-[#F26419] hover:text-white"
-            >
-              {link.name}
-            </Link>
-          ))}
-        </nav>
+        <DesktopNav navLinks={desktopNavLinks} />
 
-        {/* Desktop Account Button */}
-        <div className="hidden md:flex justify-end">
-          <Link
-            href="/account"
-            className="rounded-lg border-2 border-black bg-[#2F4F4F] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#F26419] hover:shadow-md"
-          >
-            Account
+        {/* Desktop Right: Cart & Account Button */}
+        <div className="hidden md:flex items-center gap-4 justify-end">
+          <Link href="/cart" className="relative p-2 text-[#2F4F4F] hover:text-[#F26419] transition" aria-label="Shopping Cart">
+            <ShoppingCart className="w-6 h-6" />
           </Link>
+          {session ? (
+            <UserMenu user={session.user} />
+          ) : (
+            <Link
+              href="/account"
+              className="rounded-lg border-2 border-black bg-[#2F4F4F] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#F26419] hover:shadow-md"
+            >
+              Account
+            </Link>
+          )}
         </div>
 
       </div>
