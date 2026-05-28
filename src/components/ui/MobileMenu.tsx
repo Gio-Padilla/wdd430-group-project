@@ -117,7 +117,7 @@ export default function MobileMenu({ navLinks, user }: { navLinks: NavLink[], us
                   </Link>
                 ) : (
                   <Link
-                    href="/account"
+                    href="/account?mode=login"
                     onClick={() => setIsOpen(false)}
                     className="flex items-center gap-3.5 px-6 py-3.5 text-[#2F4F4F] hover:bg-gray-50 transition"
                   >

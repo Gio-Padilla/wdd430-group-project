@@ -71,7 +71,7 @@ export default async function Header() {
             <UserMenu user={session.user} />
           ) : (
             <Link
-              href="/account"
+              href="/account?mode=login"
               className="rounded-lg border-2 border-black bg-[#2F4F4F] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#F26419] hover:shadow-md"
             >
               Account
