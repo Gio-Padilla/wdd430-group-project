@@ -22,7 +22,7 @@ import { Aladin, Quicksand, Roboto } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/ui/Header";
 import Footer from "@/components/ui/Footer";
-import { AuthProvider } from "@/components/providers/AuthProvider";
+import { SessionProvider } from 'next-auth/react';
 import { CartProvider } from "@/components/providers/CartProvider";
 import { ToastProvider } from "@/components/providers/ToastProvider";
 
@@ -83,7 +83,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${displayFont.variable} ${bodyFont.variable} ${uiFont.variable}`}>
       <body className="min-h-screen flex flex-col bg-background text-text font-body antialiased">
-        <AuthProvider>
+        <SessionProvider>
           <CartProvider>
             <ToastProvider>
               <a href="#main-content" className="skip-to-content">
@@ -96,7 +96,7 @@ export default function RootLayout({
               <Footer />
             </ToastProvider>
           </CartProvider>
-        </AuthProvider>
+        </SessionProvider>
       </body>
     </html>
   );

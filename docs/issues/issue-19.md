@@ -105,7 +105,7 @@ import { ShoppingCart } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import QuantitySelector from '@/components/ui/QuantitySelector';
 import { useCart } from '@/components/providers/CartProvider';
-import { useAuth } from '@/components/providers/AuthProvider';
+import { useSession } from 'next-auth/react';
 import { useToast } from '@/components/providers/ToastProvider';
 import { useRouter } from 'next/navigation';
 
@@ -113,7 +113,8 @@ export default function AddToCartButton({ productId, maxQty, disabled }) {
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const { addItem } = useCart();
-  const { user } = useAuth();
+  const { data: session } = useSession();
+  const user = session?.user;
   const { showToast } = useToast();
   const router = useRouter();
 
@@ -167,7 +168,7 @@ export default function AddToCartButton({ productId, maxQty, disabled }) {
 
 Key implementation (see reference repo for exact code):
 - `'use client'` directive
-- Imports: `useState`, `Image`, `StarRating`, `Button`, `useAuth`, `useToast`, `formatDate`, `MessageSquare`, `Link`, `replyToReviewAction`
+- Imports: `useState`, `Image`, `StarRating`, `Button`, `useSession`, `useToast`, `formatDate`, `MessageSquare`, `Link`, `replyToReviewAction`
 - Props: `productId`, `sellerId`, `reviews` (initial), `avgRating`, `reviewCount`
 - Seller reply state management: `replyingTo`, `replyText`, `isSubmittingReply`
 - Shows aggregate rating with StarRating component

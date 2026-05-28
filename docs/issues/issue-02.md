@@ -18,7 +18,7 @@
 
 ### 1. Install production dependencies
 ```bash
-pnpm add @prisma/adapter-pg @prisma/client bcryptjs cloudinary jose lucide-react next-cloudinary pg
+pnpm add @prisma/adapter-pg @prisma/client bcryptjs cloudinary next-auth@beta lucide-react next-cloudinary pg
 ```
 
 ### 2. Install dev dependencies

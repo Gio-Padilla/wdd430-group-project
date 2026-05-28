@@ -19,7 +19,7 @@
 
 Key implementation (see reference repo for exact code):
 - `'use client'` directive
-- Imports: `Image`, `useAuth`, `useToast`, `useEffect`, `useState`, `formatPrice`, `formatDate`, `Badge`, `PageLoader`, `EmptyState`, icons (Package, Upload, Trash2, AlertTriangle, X), `Button`, `CloudinaryUploadButton`, `Link`
+- Imports: `Image`, `useSession`, `signOut`, `useToast`, `useEffect`, `useState`, `formatPrice`, `formatDate`, `Badge`, `PageLoader`, `EmptyState`, icons (Package, Upload, Trash2, AlertTriangle, X), `Button`, `CloudinaryUploadButton`, `Link`
 - Server action imports: `updateProfileAction`, `deleteAccountAction`, `getOrdersAction`
 - **State:** orders, loadingOrders, name, email, avatarUrl, isSaving, showDeleteModal, isDeleting
 - **useEffect:** On user load, sets form fields and fetches orders via `getOrdersAction()`

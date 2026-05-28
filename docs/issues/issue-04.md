@@ -12,9 +12,12 @@
 ## Checklist
 - [ ] **Prerequisite:** Ensure Issue 03 are completed.
 - [ ] Create `src/lib/prisma.ts`
-- [ ] Create `src/lib/auth.ts`
+- [ ] Create `src/auth.config.ts` (Edge-safe NextAuth config)
+- [ ] Create `src/auth.ts` (Full NextAuth config with Credentials provider)
+- [ ] Create `src/app/api/auth/[...nextauth]/route.ts` (NextAuth route handler)
+- [ ] Create `src/lib/auth.ts` (Password utilities only)
+- [ ] Create `src/proxy.ts` (Next.js 16 route guard — uses NextAuth)
 - [ ] Create `src/lib/utils.ts`
-- [ ] Create `src/proxy.ts` (Next.js 16 route guard — replaces `middleware.ts`)
 - [ ] Create `src/types/index.ts`
 
 ## Files to Create
@@ -48,115 +51,14 @@ if (process.env.NODE_ENV !== 'production') {
 
 export default prisma;
 ```
-
----
-
-### File 2 — `src/lib/auth.ts`
+### File 2 — `src/auth.config.ts` (Edge-safe — used by proxy)
 
 > This is just a suggestion so you know where to start, how to implement, feel free to adapt and change as you go
 
-```	s
-import { SignJWT, jwtVerify } from 'jose';
-import { hash, compare } from 'bcryptjs';
-import { cookies } from 'next/headers';
+> This file contains the edge-compatible NextAuth config used by the proxy (middleware). It does NOT include the Prisma adapter or database calls.
 
-if (!process.env.JWT_SECRET) {
-  throw new Error(
-    'JWT_SECRET environment variable is required. Generate one with: openssl rand -base64 32 or https://generate-secret.vercel.app/32'
-  );
-}
-
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
-
-const COOKIE_NAME = 'haven_auth_token';
-const TOKEN_EXPIRY = '1d';
-const SALT_ROUNDS = 12;
-
-export async function hashPassword(password) {
-  return hash(password, SALT_ROUNDS);
-}
-
-export async function comparePassword(password, hashedPassword) {
-  return compare(password, hashedPassword);
-}
-
-export async function signToken(payload) {
-  return new SignJWT({ ...payload })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setIssuedAt()
-    .setExpirationTime(TOKEN_EXPIRY)
-    .sign(JWT_SECRET);
-}
-
-export async function verifyToken(token) {
-  try {
-    const { payload } = await jwtVerify(token, JWT_SECRET);
-    return payload;
-  } catch {
-    return null;
-  }
-}
-
-export async function getSession() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(COOKIE_NAME)?.value;
-  if (!token) return null;
-  return verifyToken(token);
-}
-
-export async function getSessionFromRequest(request) {
-  const token = request.cookies.get(COOKIE_NAME)?.value;
-  if (!token) return null;
-  return verifyToken(token);
-}
-
-export function setAuthCookie(response, token) {
-  response.cookies.set(COOKIE_NAME, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: 60 * 60 * 24, // 1 day
-    path: '/',
-  });
-}
-
-export function clearAuthCookie(response) {
-  response.cookies.set(COOKIE_NAME, '', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: 0,
-    path: '/',
-  });
-}
-
-export { COOKIE_NAME };
-```
-
----
-
-### File 3 — `src/proxy.ts`
-
-> This is just a suggestion so you know where to start, how to implement, feel free to adapt and change as you go
-
-> Next.js 16 renamed `middleware.ts` to `proxy.ts`. This file guards routes:
-> - `/cart`, `/checkout`, `/account` — require authentication
-> - `/dashboard` — requires seller role
-> - `/auth/login`, `/auth/register` — redirects authenticated users away
-
-```	s
-import { NextResponse } from 'next/server';
-import { jwtVerify } from 'jose';
-
-if (!process.env.JWT_SECRET) {
-  throw new Error(
-    'JWT_SECRET environment variable is required. Generate one with: openssl rand -base64 32'
-  );
-}
-
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
-
-const COOKIE_NAME = 'haven_auth_token';
+```	ts
+import type { NextAuthConfig } from 'next-auth';
 
 // Routes that require authentication
 const AUTH_ROUTES = ['/cart', '/checkout', '/account'];
@@ -167,53 +69,154 @@ const SELLER_ROUTES = ['/dashboard'];
 // Routes that should redirect authenticated users away
 const GUEST_ROUTES = ['/auth/login', '/auth/register'];
 
-export async function proxy(request) {
-  const { pathname } = request.nextUrl;
-  const token = request.cookies.get(COOKIE_NAME)?.value;
+export const authConfig: NextAuthConfig = {
+  pages: {
+    signIn: '/auth/login',
+  },
+  callbacks: {
+    authorized({ auth, request: { nextUrl } }) {
+      const isLoggedIn = !!auth?.user;
+      const pathname = nextUrl.pathname;
 
-  let user = null;
+      // Redirect authenticated users away from login/register
+      if (isLoggedIn && GUEST_ROUTES.some((route) => pathname.startsWith(route))) {
+        return Response.redirect(new URL('/', nextUrl));
+      }
 
-  // Try to verify token if present
-  if (token) {
-    try {
-      const { payload } = await jwtVerify(token, JWT_SECRET);
-      user = payload;
-    } catch {
-      // Token is invalid — clear it
-      const response = NextResponse.next();
-      response.cookies.delete(COOKIE_NAME);
-      return response;
-    }
-  }
+      // Check auth-required routes
+      if (AUTH_ROUTES.some((route) => pathname.startsWith(route))) {
+        if (!isLoggedIn) return false; // Redirect to signIn page
+      }
 
-  // Redirect authenticated users away from login/register
-  if (user && GUEST_ROUTES.some((route) => pathname.startsWith(route))) {
-    return NextResponse.redirect(new URL('/', request.url));
-  }
+      // Check seller-only routes
+      if (SELLER_ROUTES.some((route) => pathname.startsWith(route))) {
+        if (!isLoggedIn) return false;
+        if (auth?.user?.role !== 'seller') {
+          return Response.redirect(new URL('/', nextUrl));
+        }
+      }
 
-  // Check auth-required routes
-  if (AUTH_ROUTES.some((route) => pathname.startsWith(route))) {
-    if (!user) {
-      const loginUrl = new URL('/auth/login', request.url);
-      loginUrl.searchParams.set('redirect', pathname);
-      return NextResponse.redirect(loginUrl);
-    }
-  }
+      return true;
+    },
+    jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.role = user.role;
+      }
+      return token;
+    },
+    session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.id as number;
+        session.user.role = token.role as string;
+      }
+      return session;
+    },
+  },
+  providers: [], // Configured in auth.ts
+};
+```
 
-  // Check seller-only routes
-  if (SELLER_ROUTES.some((route) => pathname.startsWith(route))) {
-    if (!user) {
-      const loginUrl = new URL('/auth/login', request.url);
-      loginUrl.searchParams.set('redirect', pathname);
-      return NextResponse.redirect(loginUrl);
-    }
-    if (user.role !== 'seller') {
-      return NextResponse.redirect(new URL('/', request.url));
-    }
-  }
+---
 
-  return NextResponse.next();
+### File 3 — `src/auth.ts` (Full NextAuth config with Credentials provider)
+
+> This is just a suggestion so you know where to start, how to implement, feel free to adapt and change as you go
+
+> This is the main NextAuth configuration. It uses the Credentials provider with bcryptjs for password comparison. No database adapter is used — sessions are JWT-only.
+
+```	ts
+import NextAuth from 'next-auth';
+import Credentials from 'next-auth/providers/credentials';
+import { compare } from 'bcryptjs';
+import prisma from '@/lib/prisma';
+import { authConfig } from './auth.config';
+
+export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
+  session: { strategy: 'jwt' },
+  providers: [
+    Credentials({
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) return null;
+
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email as string },
+        });
+
+        if (!user) return null;
+
+        const isValid = await compare(
+          credentials.password as string,
+          user.passwordHash
+        );
+
+        if (!isValid) return null;
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          image: user.avatarUrl,
+        };
+      },
+    }),
+  ],
+});
+```
+
+---
+
+### File 4 — `src/app/api/auth/[...nextauth]/route.ts` (NextAuth Route Handler)
+
+> This is just a suggestion so you know where to start, how to implement, feel free to adapt and change as you go
+
+```	ts
+export { handlers as GET, handlers as POST } from '@/auth';
+```
+
+> ⚠️ Note: You also need to create the `src/app/api/auth/[...nextauth]/` directory in Issue 01's folder structure.
+
+---
+
+### File 5 — `src/lib/auth.ts` (Password utility — kept for registration)
+
+> This is just a suggestion so you know where to start, how to implement, feel free to adapt and change as you go
+
+> This file now only contains password hashing utilities used by the registration server action. All session management is handled by NextAuth.
+
+```	ts
+import { hash, compare } from 'bcryptjs';
+
+const SALT_ROUNDS = 12;
+
+export async function hashPassword(password: string) {
+  return hash(password, SALT_ROUNDS);
 }
+
+export async function comparePassword(password: string, hashedPassword: string) {
+  return compare(password, hashedPassword);
+}
+```
+
+---
+
+### File 6 — `src/proxy.ts`
+
+> This is just a suggestion so you know where to start, how to implement, feel free to adapt and change as you go
+
+> Next.js 16 renamed `middleware.ts` to `proxy.ts`. This file now uses NextAuth's `auth` wrapper from `auth.config.ts`. All route protection logic is handled by the `authorized` callback.
+
+```	ts
+import NextAuth from 'next-auth';
+import { authConfig } from './auth.config';
+
+export default NextAuth(authConfig).auth;
 
 export const config = {
   matcher: [

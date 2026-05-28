@@ -26,7 +26,8 @@ pnpm prisma init
 
 ```env
 DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DB_NAME"
-JWT_SECRET="generate-a-64-char-hex-secret"
+AUTH_SECRET="generate-a-64-char-hex-secret"  # run: npx auth secret
+AUTH_URL="http://localhost:3000"
 NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME="your_cloud_name"
 NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET="your_preset"
 CLOUDINARY_API_SECRET="your_secret"

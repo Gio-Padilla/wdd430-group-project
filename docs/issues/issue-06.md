@@ -19,86 +19,24 @@
 
 > This is just a suggestion so you know where to start, how to implement, feel free to adapt and change as you go
 
-```	sx
+> This wraps NextAuth's `SessionProvider`. All components that previously used `useAuth()` should now use `useSession()` from `next-auth/react`.
+
+```	tsx
 'use client';
 
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { getCurrentUserAction, loginAction, registerAction, logoutAction } from '@/lib/actions/auth';
+import { SessionProvider } from 'next-auth/react';
 
-const AuthContext = createContext(undefined);
-
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const refreshUser = useCallback(async () => {
-    try {
-      const data = await getCurrentUserAction();
-      if (data.success) {
-        setUser(data.data);
-      } else {
-        setUser(null);
-      }
-    } catch {
-      setUser(null);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    refreshUser();
-  }, [refreshUser]);
-
-  const login = async (email, password) => {
-    try {
-      const data = await loginAction(email, password);
-      if (data.success) {
-        setUser(data.data);
-        return { success: true };
-      }
-      return { success: false, error: data.error || 'Login failed' };
-    } catch {
-      return { success: false, error: 'Network error' };
-    }
-  };
-
-  const register = async (name, email, password, role) => {
-    try {
-      const data = await registerAction(name, email, password, role);
-      if (data.success) {
-        setUser(data.data);
-        return { success: true };
-      }
-      return { success: false, error: data.error || 'Registration failed' };
-    } catch {
-      return { success: false, error: 'Network error' };
-    }
-  };
-
-  const logout = async () => {
-    try {
-      await logoutAction();
-    } finally {
-      setUser(null);
-    }
-  };
-
-
-  return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, logout, refreshUser }}>
-      {children}
-    </AuthContext.Provider>
-  );
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  return <SessionProvider>{children}</SessionProvider>;
 }
+```
 
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-}
+> ⚠️ **Migration Note:** Replace all `useAuth()` calls in other components with `useSession()` from `next-auth/react`:
+> - `const { user, logout } = useAuth()` → `const { data: session } = useSession()` + `signOut()` from `next-auth/react`
+> - `user` → `session?.user`
+> - `user.role` → `session?.user?.role`
+> - `login(email, password)` → `signIn('credentials', { email, password, redirect: false })`
+> - `logout()` → `signOut()`
 ```
 
 ---
@@ -186,13 +124,14 @@ export function useToast() {
 'use client';
 
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { useAuth } from './AuthProvider';
+import { useSession } from 'next-auth/react';
 import { getCartAction, addToCartAction, updateCartQuantityAction, removeCartItemAction } from '@/lib/actions/cart';
 
 const CartContext = createContext(undefined);
 
 export function CartProvider({ children }) {
-  const { user } = useAuth();
+  const { data: session } = useSession();
+  const user = session?.user;
   const [items, setItems] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 

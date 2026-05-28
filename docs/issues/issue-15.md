@@ -20,18 +20,18 @@
 'use server';
 
 import prisma from '@/lib/prisma';
-import { getSession } from '@/lib/auth';
+import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
 
 export async function getCartAction() {
   try {
-    const session = await getSession();
-    if (!session) {
+    const session = await auth();
+    if (!session?.user) {
       return { success: false, error: 'Unauthorized' };
     }
 
     const items = await prisma.cartItem.findMany({
-      where: { userId: session.id },
+      where: { userId: session.user.id },
       include: {
         product: {
           include: {
@@ -52,8 +52,8 @@ export async function getCartAction() {
 
 export async function addToCartAction(productId, quantity = 1) {
   try {
-    const session = await getSession();
-    if (!session) {
+    const session = await auth();
+    if (!session?.user) {
       return { success: false, error: 'Unauthorized' };
     }
 
@@ -71,7 +71,7 @@ export async function addToCartAction(productId, quantity = 1) {
     const cartItem = await prisma.cartItem.upsert({
       where: {
         userId_productId: {
-          userId: session.id,
+          userId: session.user.id,
           productId: parseInt(productId),
         },
       },
@@ -79,7 +79,7 @@ export async function addToCartAction(productId, quantity = 1) {
         quantity: { increment: quantity },
       },
       create: {
-        userId: session.id,
+        userId: session.user.id,
         productId: parseInt(productId),
         quantity,
       },
@@ -102,8 +102,8 @@ export async function addToCartAction(productId, quantity = 1) {
 
 export async function updateCartQuantityAction(cartItemId, quantity) {
   try {
-    const session = await getSession();
-    if (!session) {
+    const session = await auth();
+    if (!session?.user) {
       return { success: false, error: 'Unauthorized' };
     }
 
@@ -112,7 +112,7 @@ export async function updateCartQuantityAction(cartItemId, quantity) {
     }
 
     const cartItem = await prisma.cartItem.findUnique({ where: { id: parseInt(cartItemId) } });
-    if (!cartItem || cartItem.userId !== session.id) {
+    if (!cartItem || cartItem.userId !== session.user.id) {
       return { success: false, error: 'Not found' };
     }
 
@@ -131,13 +131,13 @@ export async function updateCartQuantityAction(cartItemId, quantity) {
 
 export async function removeCartItemAction(cartItemId) {
   try {
-    const session = await getSession();
-    if (!session) {
+    const session = await auth();
+    if (!session?.user) {
       return { success: false, error: 'Unauthorized' };
     }
 
     const cartItem = await prisma.cartItem.findUnique({ where: { id: parseInt(cartItemId) } });
-    if (!cartItem || cartItem.userId !== session.id) {
+    if (!cartItem || cartItem.userId !== session.user.id) {
       return { success: false, error: 'Not found' };
     }
 
@@ -162,18 +162,18 @@ export async function removeCartItemAction(cartItemId) {
 'use server';
 
 import prisma from '@/lib/prisma';
-import { getSession } from '@/lib/auth';
+import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
 
 export async function getOrdersAction() {
   try {
-    const session = await getSession();
-    if (!session) {
+    const session = await auth();
+    if (!session?.user) {
       return { success: false, error: 'Unauthorized' };
     }
 
     const orders = await prisma.order.findMany({
-      where: { userId: session.id },
+      where: { userId: session.user.id },
       include: {
         items: {
           include: {
@@ -200,8 +200,8 @@ export async function getOrdersAction() {
 
 export async function createOrderAction(shippingAddress) {
   try {
-    const session = await getSession();
-    if (!session) {
+    const session = await auth();
+    if (!session?.user) {
       return { success: false, error: 'Unauthorized' };
     }
 
@@ -211,7 +211,7 @@ export async function createOrderAction(shippingAddress) {
 
     // Get cart items
     const cartItems = await prisma.cartItem.findMany({
-      where: { userId: session.id },
+      where: { userId: session.user.id },
       include: { product: true },
     });
 
@@ -235,7 +235,7 @@ export async function createOrderAction(shippingAddress) {
     const order = await prisma.$transaction(async (tx) => {
       const newOrder = await tx.order.create({
         data: {
-          userId: session.id,
+          userId: session.user.id,
           status: 'confirmed',
           totalAmount,
           shippingAddress,
@@ -274,7 +274,7 @@ export async function createOrderAction(shippingAddress) {
       }
 
       // Clear cart
-      await tx.cartItem.deleteMany({ where: { userId: session.id } });
+      await tx.cartItem.deleteMany({ where: { userId: session.user.id } });
 
       return newOrder;
     });

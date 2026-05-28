@@ -26,14 +26,13 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuth } from '@/components/providers/AuthProvider';
+import { loginAction } from '@/lib/actions/auth';
 import Button from '@/components/ui/Button';
 import { Mail, Lock, Eye, EyeOff, Leaf } from 'lucide-react';
 
 import { Suspense } from 'react';
 
 function LoginContent() {
-  const { login } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') || '/';
@@ -49,7 +48,7 @@ function LoginContent() {
     setError('');
     setIsLoading(true);
 
-    const result = await login(email, password);
+    const result = await loginAction(email, password);
     setIsLoading(false);
 
     if (result.success) {
@@ -182,7 +181,7 @@ Key implementation (see reference repo for exact code):
 - Form fields: name (User icon), email (Mail icon), password (Lock icon + Eye toggle), confirm password (Lock icon)
 - Password strength indicator via `isStrongPassword()` — shows valid/invalid message
 - Validates passwords match before submit
-- Calls `useAuth().register(name, email, password, role)`
+- Calls `registerAction(name, email, password, role)` from `@/lib/actions/auth`
 - On success: redirects sellers to `/dashboard`, buyers to `/`
 - Same two-column layout as login page
 - "Already have an account? Sign in" link

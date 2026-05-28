@@ -107,6 +107,7 @@ export default function Home() {
                   src="/home-page/candle.webp"
                   alt="Handmade candles"
                   fill
+                  priority
                   sizes="(max-width: 768px) 100vw, 33vw"
                   className="object-cover"
                 />
@@ -137,6 +138,7 @@ export default function Home() {
                   src="/home-page/ceramic.webp"
                   alt="Handmade ceramics"
                   fill
+                  priority
                   sizes="(max-width: 768px) 100vw, 33vw"
                   className="object-cover"
                 />
@@ -203,6 +205,7 @@ export default function Home() {
               src="/handcrafted.webp"
               alt="Artisan crafting products"
               fill
+              priority
               sizes="(max-width: 768px) 100vw, 50vw"
               className="object-cover"
             />

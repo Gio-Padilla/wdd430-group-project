@@ -40,7 +40,7 @@ export default function AboutPage() {
             Our Story
           </span>
           <h1 className="text-4xl md:text-5xl font-bold mt-2 mb-6">
-            Welcome to Handicraft Haven
+            Welcome to Handcrafted Haven
           </h1>
           <p className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed">
             Where tradition meets modern spaces. We are a sanctuary for
