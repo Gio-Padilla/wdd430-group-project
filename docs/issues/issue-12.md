@@ -113,37 +113,23 @@ if (typeof setInterval !== 'undefined') {
 
 > This is just a suggestion so you know where to start, how to implement, feel free to adapt and change as you go
 
-```	s
+```	ts
 'use server';
 
-import { cookies } from 'next/headers';
 import prisma from '@/lib/prisma';
-import {
-  hashPassword,
-  comparePassword,
-  signToken,
-  getSession,
-  COOKIE_NAME,
-} from '@/lib/auth';
+import { hashPassword } from '@/lib/auth';
+import { auth, signIn, signOut } from '@/auth';
 import { isValidEmail, isStrongPassword } from '@/lib/utils';
 import { checkRateLimit, recordFailedAttempt, clearAttempts } from '@/lib/rateLimit';
 import { revalidatePath } from 'next/cache';
 
-const COOKIE_OPTIONS = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'lax',
-  maxAge: 60 * 60 * 24, // 1 day
-  path: '/',
-};
-
 export async function getCurrentUserAction() {
   try {
-    const session = await getSession();
-    if (!session) return { success: false, error: 'Not authenticated' };
+    const session = await auth();
+    if (!session?.user) return { success: false, error: 'Not authenticated' };
 
     const user = await prisma.user.findUnique({
-      where: { id: session.id },
+      where: { id: session.user.id },
       select: {
         id: true,
         email: true,
@@ -183,48 +169,39 @@ export async function loginAction(email, password) {
       };
     }
 
+    // Try signing in using NextAuth Credentials provider
+    try {
+      await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
+      });
+      // Successful login — clear rate limit for this email
+      clearAttempts(email);
+    } catch (error) {
+      // AuthError indicates failed login
+      recordFailedAttempt(email);
+      return { success: false, error: 'Invalid email or password' };
+    }
+
+    // Fetch user data after successful login to return to client
     const user = await prisma.user.findUnique({
       where: { email },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        avatarUrl: true,
+        bio: true,
+        location: true,
+        socialLinks: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
 
-    if (!user) {
-      recordFailedAttempt(email);
-      return { success: false, error: 'Invalid email or password' };
-    }
-
-    const isValid = await comparePassword(password, user.passwordHash);
-    if (!isValid) {
-      recordFailedAttempt(email);
-      return { success: false, error: 'Invalid email or password' };
-    }
-
-    // Successful login — clear rate limit for this email
-    clearAttempts(email);
-
-    const token = await signToken({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-    });
-
-    const cookieStore = await cookies();
-    cookieStore.set(COOKIE_NAME, token, COOKIE_OPTIONS);
-
-    const userData = {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-      avatarUrl: user.avatarUrl,
-      bio: user.bio,
-      location: user.location,
-      socialLinks: user.socialLinks,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    };
-
-    return { success: true, data: userData };
+    return { success: true, data: user };
   } catch (error) {
     console.error('loginAction error:', error);
     return { success: false, error: 'Internal server error' };
@@ -256,13 +233,30 @@ export async function registerAction(name, email, password, role) {
     }
 
     const passwordHash = await hashPassword(password);
-    const user = await prisma.user.create({
+    await prisma.user.create({
       data: {
         name,
         email,
         passwordHash,
         role: role || 'buyer',
       },
+    });
+
+    // Auto-login after registration
+    try {
+      await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
+      });
+    } catch (error) {
+      // Even if login fails somehow, registration succeeded
+      console.error('Auto-login failed after registration', error);
+    }
+
+    // Fetch user for response
+    const user = await prisma.user.findUnique({
+      where: { email },
       select: {
         id: true,
         email: true,
@@ -276,16 +270,6 @@ export async function registerAction(name, email, password, role) {
         updatedAt: true,
       },
     });
-
-    const token = await signToken({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-    });
-
-    const cookieStore = await cookies();
-    cookieStore.set(COOKIE_NAME, token, COOKIE_OPTIONS);
 
     return { success: true, data: user };
   } catch (error) {
@@ -296,8 +280,7 @@ export async function registerAction(name, email, password, role) {
 
 export async function logoutAction() {
   try {
-    const cookieStore = await cookies();
-    cookieStore.set(COOKIE_NAME, '', { ...COOKIE_OPTIONS, maxAge: 0 });
+    await signOut({ redirect: false });
     return { success: true, message: 'Logged out' };
   } catch (error) {
     console.error('logoutAction error:', error);
@@ -307,33 +290,31 @@ export async function logoutAction() {
 
 export async function updateProfileAction(data) {
   try {
-    const session = await getSession();
-    if (!session) return { success: false, error: 'Unauthorized' };
+    const session = await auth();
+    if (!session?.user) return { success: false, error: 'Unauthorized' };
 
     const { name, email, bio, location, avatarUrl, socialLinks, role } = data;
 
     // Role escalation guard: only allow buyer → seller promotion.
     // Sellers cannot downgrade, and arbitrary roles are rejected.
-    // This is intentional: in this marketplace, any buyer can become a seller
-    // by opting in through the profile/sell page. No admin approval required.
     if (role) {
       if (role !== 'seller') {
         return { success: false, error: 'Invalid role' };
       }
-      if (session.role === 'seller') {
+      if (session.user.role === 'seller') {
         return { success: false, error: 'You are already a seller' };
       }
     }
 
     if (email) {
       const existingUser = await prisma.user.findUnique({ where: { email } });
-      if (existingUser && existingUser.id !== session.id) {
+      if (existingUser && existingUser.id !== session.user.id) {
         return { success: false, error: 'Email already in use' };
       }
     }
 
     const updated = await prisma.user.update({
-      where: { id: session.id },
+      where: { id: session.user.id },
       data: {
         ...(name && { name }),
         ...(email && { email }),
@@ -341,7 +322,7 @@ export async function updateProfileAction(data) {
         ...(location !== undefined && { location }),
         ...(avatarUrl !== undefined && { avatarUrl }),
         ...(socialLinks !== undefined && { socialLinks }),
-        ...(role === 'seller' && session.role !== 'seller' && { role }),
+        ...(role === 'seller' && session.user.role !== 'seller' && { role }),
       },
       select: {
         id: true,
@@ -356,18 +337,6 @@ export async function updateProfileAction(data) {
         updatedAt: true,
       },
     });
-
-    // If role changed or name changed, re-sign token
-    if (role === 'seller' || updated.name !== session.name || updated.email !== session.email) {
-      const token = await signToken({
-        id: updated.id,
-        email: updated.email,
-        name: updated.name,
-        role: updated.role,
-      });
-      const cookieStore = await cookies();
-      cookieStore.set(COOKIE_NAME, token, COOKIE_OPTIONS);
-    }
 
     revalidatePath('/dashboard/profile');
     revalidatePath('/account');
@@ -380,15 +349,14 @@ export async function updateProfileAction(data) {
 
 export async function deleteAccountAction() {
   try {
-    const session = await getSession();
-    if (!session) return { success: false, error: 'Unauthorized' };
+    const session = await auth();
+    if (!session?.user) return { success: false, error: 'Unauthorized' };
 
     await prisma.user.delete({
-      where: { id: session.id },
+      where: { id: session.user.id },
     });
 
-    const cookieStore = await cookies();
-    cookieStore.set(COOKIE_NAME, '', { ...COOKIE_OPTIONS, maxAge: 0 });
+    await signOut({ redirect: false });
 
     return { success: true, message: 'Account deleted' };
   } catch (error) {

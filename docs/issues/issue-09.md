@@ -36,13 +36,14 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ShoppingCart, Menu, X, User, LogOut, LayoutDashboard, ChevronDown } from 'lucide-react';
-import { useAuth } from '@/components/providers/AuthProvider';
+import { useSession, signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import { useCart } from '@/components/providers/CartProvider';
 import MobileMenu from './MobileMenu';
 
 export default function Header() {
-  const { user, logout } = useAuth();
+  const { data: session } = useSession();
+  const user = session?.user;
   const { count } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
@@ -201,7 +202,7 @@ export default function Header() {
                     )}
                     <hr className="my-1 border-border-light" />
                     <button
-                      onClick={logout}
+                      onClick={() => signOut()}
                       className="flex items-center gap-3 px-4 py-2.5 text-sm font-body text-error w-full text-left hover:bg-error-light transition-colors"
                     >
                       <LogOut size={16} />
@@ -256,7 +257,7 @@ Due to the size of this file (213 lines), please copy the exact code from the re
 
 Key implementation details:
 - `'use client'` directive
-- Imports: `useEffect`, `useRef`, `Link`, `Image`, icons (`X`, `ShoppingCart`, `User`, `LogOut`, `LayoutDashboard`, `Store`), `useAuth`, `usePathname`, `useCart`
+- Imports: `useEffect`, `useRef`, `Link`, `Image`, icons (`X`, `ShoppingCart`, `User`, `LogOut`, `LayoutDashboard`, `Store`), `useSession`, `signOut`, `usePathname`, `useCart`
 - Closes on Escape key, locks body scroll when open
 - Focus trap (first focusable element gets focus)
 - Overlay click to close

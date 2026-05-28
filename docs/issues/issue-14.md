@@ -28,14 +28,14 @@
 'use server';
 
 import prisma from '@/lib/prisma';
-import { getSession } from '@/lib/auth';
+import { auth } from '@/auth';
 import { slugify } from '@/lib/utils';
 import { revalidatePath } from 'next/cache';
 
 export async function createProductAction(data) {
   try {
-    const session = await getSession();
-    if (!session || session.role !== 'seller') {
+    const session = await auth();
+    if (!session?.user || session.user.role !== 'seller') {
       return { success: false, error: 'Unauthorized' };
     }
 
@@ -54,7 +54,7 @@ export async function createProductAction(data) {
 
     const product = await prisma.product.create({
       data: {
-        sellerId: session.id,
+        sellerId: session.user.id,
         categoryId: parseInt(categoryId),
         title,
         slug,
@@ -92,15 +92,15 @@ export async function createProductAction(data) {
 
 export async function updateProductAction(id, data) {
   try {
-    const session = await getSession();
-    if (!session) {
+    const session = await auth();
+    if (!session?.user) {
       return { success: false, error: 'Unauthorized' };
     }
 
     const productId = parseInt(id);
 
     const product = await prisma.product.findUnique({ where: { id: productId } });
-    if (!product || product.sellerId !== session.id) {
+    if (!product || product.sellerId !== session.user.id) {
       return { success: false, error: 'Not found or unauthorized' };
     }
 
@@ -150,15 +150,15 @@ export async function updateProductAction(id, data) {
 
 export async function deleteProductAction(id) {
   try {
-    const session = await getSession();
-    if (!session) {
+    const session = await auth();
+    if (!session?.user) {
       return { success: false, error: 'Unauthorized' };
     }
 
     const productId = parseInt(id);
 
     const product = await prisma.product.findUnique({ where: { id: productId } });
-    if (!product || product.sellerId !== session.id) {
+    if (!product || product.sellerId !== session.user.id) {
       return { success: false, error: 'Not found or unauthorized' };
     }
 
@@ -184,13 +184,13 @@ export async function deleteProductAction(id) {
 'use server';
 
 import prisma from '@/lib/prisma';
-import { getSession } from '@/lib/auth';
+import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
 
 export async function createReviewAction(data) {
   try {
-    const session = await getSession();
-    if (!session) {
+    const session = await auth();
+    if (!session?.user) {
       return { success: false, error: 'Must be logged in to review' };
     }
 
@@ -216,7 +216,7 @@ export async function createReviewAction(data) {
       include: { order: true, review: true },
     });
 
-    if (!orderItem || orderItem.order.userId !== session.id || orderItem.productId !== parseInt(productId)) {
+    if (!orderItem || orderItem.order.userId !== session.user.id || orderItem.productId !== parseInt(productId)) {
       return {
         success: false,
         error: 'Invalid order item or unauthorized',
@@ -232,7 +232,7 @@ export async function createReviewAction(data) {
 
     // Check that user isn't reviewing own product
     const product = await prisma.product.findUnique({ where: { id: parseInt(productId) } });
-    if (product?.sellerId === session.id) {
+    if (product?.sellerId === session.user.id) {
       return {
         success: false,
         error: 'You cannot review your own product',
@@ -243,7 +243,7 @@ export async function createReviewAction(data) {
     const review = await prisma.review.create({
       data: {
         productId: parseInt(productId),
-        userId: session.id,
+        userId: session.user.id,
         orderItemId: parseInt(orderItemId),
         rating: parseInt(rating),
         comment,
@@ -279,8 +279,8 @@ export async function createReviewAction(data) {
 
 export async function replyToReviewAction(reviewId, sellerReply) {
   try {
-    const session = await getSession();
-    if (!session) {
+    const session = await auth();
+    if (!session?.user) {
       return { success: false, error: 'Unauthorized' };
     }
 
@@ -303,7 +303,7 @@ export async function replyToReviewAction(reviewId, sellerReply) {
       return { success: false, error: 'Review not found' };
     }
 
-    if (review.product.sellerId !== session.id) {
+    if (review.product.sellerId !== session.user.id) {
       return { success: false, error: 'Forbidden. Only the seller can reply to this review.' };
     }
 

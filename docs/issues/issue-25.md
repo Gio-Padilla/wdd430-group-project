@@ -23,7 +23,7 @@
 ```	sx
 'use client';
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/components/providers/AuthProvider';
+import { useSession } from 'next-auth/react';
 import { useToast } from '@/components/providers/ToastProvider';
 import Button from '@/components/ui/Button';
 import { Save, Camera } from 'lucide-react';
@@ -33,7 +33,8 @@ import Image from 'next/image';
 import { updateProfileAction } from '@/lib/actions/auth';
 
 export default function DashboardProfilePage() {
-  const { user, refreshUser } = useAuth();
+  const { data: session, update: refreshUser } = useSession();
+  const user = session?.user;
   const { showToast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [form, setForm] = useState({ avatarUrl: '', bio: '', location: '', instagram: '', twitter: '', website: '' });
@@ -102,7 +103,7 @@ export default function DashboardProfilePage() {
 
 ```	sx
 'use client';
-import { useAuth } from '@/components/providers/AuthProvider';
+import { useSession } from 'next-auth/react';
 import { useToast } from '@/components/providers/ToastProvider';
 import { updateProfileAction } from '@/lib/actions/auth';
 import { useState, useEffect } from 'react';
@@ -113,7 +114,9 @@ import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { useRouter } from 'next/navigation';
 
 export default function SellPage() {
-  const { user, isLoading, refreshUser } = useAuth();
+  const { data: session, status, update: refreshUser } = useSession();
+  const user = session?.user;
+  const isLoading = status === 'loading';
   const { showToast } = useToast();
   const router = useRouter();
 
