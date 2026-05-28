@@ -2,7 +2,7 @@ import { Scissors, Heart, Package } from "lucide-react"
 
 
 
-export default function SignInCTA() {
+export default function SignInCTA({ accountType = "buy" }: { accountType?: "buy" | "sell" }) {
     return (
         <div className="w-full h-full bg-primary/95 p-8 flex flex-col gap-8 rounded-xl">
 
@@ -17,21 +17,30 @@ export default function SignInCTA() {
             {/* Headline */}
             <div className="flex flex-col gap-3">
                 <h2 className="text-3xl font-medium text-background leading-snug">
-                    Made with care.<br />
-                    <span className="text-accent">Delivered with love.</span>
+                    {accountType === "sell" ? (
+                        <>Reach a global audience.<br /><span className="text-accent">Grow your business.</span></>
+                    ) : (
+                        <>Made with care.<br /><span className="text-accent">Delivered with love.</span></>
+                    )}
                 </h2>
                 <p className="text-sm text-background/60 leading-relaxed">
-                    Discover unique, handcrafted treasures from independent makers around the world.
+                    {accountType === "sell" 
+                        ? "Join our marketplace of artisans and turn your passion into profit." 
+                        : "Discover unique, handcrafted treasures from independent makers around the world."}
                 </p>
             </div>
 
             {/* Perks */}
             <ul className="flex flex-col gap-3">
-                {[
+                {(accountType === "sell" ? [
+                    { icon: Package, label: "Easy product listing & management" },
+                    { icon: Heart, label: "Connect with passionate buyers" },
+                    { icon: Scissors, label: "Seller tools designed for artisans" },
+                ] : [
                     { icon: Scissors, label: "Every piece is one-of-a-kind" },
                     { icon: Heart, label: "Support independent artisans" },
                     { icon: Package, label: "Thoughtfully packaged & shipped" },
-                ].map(({ icon: Icon, label }) => (
+                ]).map(({ icon: Icon, label }) => (
                     <li key={label} className="flex items-center gap-3">
                         <Icon className="w-4 h-4 text-accent shrink-0" />
                         <span className="text-sm text-background">{label}</span>
@@ -57,7 +66,7 @@ export default function SignInCTA() {
                     ))}
                 </div>
                 <p className="text-xs text-background/60 leading-snug">
-                    Join <span className="text-background font-medium">2,400+</span> collectors already inside
+                    Join <span className="text-background font-medium">{accountType === "sell" ? "500+" : "2,400+"}</span> {accountType === "sell" ? "artisans" : "collectors"} already inside
                 </p>
             </div>
 

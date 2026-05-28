@@ -1,22 +1,13 @@
-import SignInCard from "@/components/ui/SignInCard";
-import SignInCTA from "@/components/ui/SignInCTA";
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
+import AccountClient from "./AccountClient";
 
-export default function AccountPage() {
-    return (
-        <div
-            className="
-                flex
-                flex-col
-                items-center
-                justify-center
-                gap-6
-                bg-background
-                p-5
-                md:flex-row
-            "
-        >
-            <SignInCard />
-            <SignInCTA />
-        </div>
-    );
+export default async function AccountPage() {
+    const session = await auth();
+    
+    if (session) {
+        redirect("/");
+    }
+
+    return <AccountClient />;
 }
