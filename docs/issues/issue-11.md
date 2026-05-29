@@ -2,6 +2,7 @@
 
 **Suggested Branch:** `[YOUR-INITIALS]-issue-11-root-layout-error`
 
+> ⚠️ **Updated:** We have moved away from Prisma. Database error detection in the error page should check for `pg`/database/connection keywords instead of prisma-specific ones.
 
 **Labels:** `feature`, `frontend` | **Priority:** 🔴 Critical | **Depends on:** Issues 05, 06, 09
 
@@ -17,7 +18,7 @@
 
 > This is just a suggestion so you know where to start, how to implement, feel free to adapt and change as you go
 
-```	sx
+```tsx
 import { Aladin, Quicksand, Roboto } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/ui/Header";
@@ -109,11 +110,9 @@ export default function RootLayout({
 
 > This is just a suggestion so you know where to start, how to implement, feel free to adapt and change as you go
 
-> Copy the full 132-line file from the reference repo: `src/app/error.tsx`
-
 Key implementation:
 - `'use client'` directive
-- Detects database errors vs generic runtime errors by checking error message/stack/name for prisma/database/connection keywords
+- Detects database errors vs generic runtime errors by checking error message/stack/name for **pg/database/connection** keywords (not prisma)
 - Database error UI: blue accent, `Database` icon, "Service Offline" badge
 - Generic error UI: orange accent, `AlertTriangle` icon, "Application Error" badge
 - "Try Again" button calls `reset()`, "Go Home" button does `window.location.href = '/'`
@@ -124,7 +123,7 @@ Key implementation:
 
 > This is just a suggestion so you know where to start, how to implement, feel free to adapt and change as you go
 
-```	sx
+```tsx
 import Link from 'next/link';
 import { Home, Search } from 'lucide-react';
 

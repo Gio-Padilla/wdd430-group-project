@@ -2,14 +2,13 @@
 
 **Suggested Branch:** `[YOUR-INITIALS]-issue-20-categories-sellers-directory`
 
+> ⚠️ **Updated:** All database queries now use raw SQL via the `pg` driver. Prisma has been removed from the project. Schema is at `src/db/schema.sql`.
 
 > **User Story:** As a community member, I want to view a list of all active sellers so that I can discover new local artisans to support.
 > **Acceptance Criteria:** A "Sellers" directory page must list all authenticated artisan profiles with a link to their individual shop pages.
 
-
 > **User Story:** As an authenticated seller, I want to create a dedicated profile page so that I can share my brand story and craftsmanship with potential buyers.
 > **Acceptance Criteria:** The profile must include a bio section, a profile image upload, and a display area for listed items.
-
 
 **Labels:** `feature`, `frontend` | **Priority:** 🟢 Medium | **Depends on:** Issues 07, 08
 
@@ -26,10 +25,10 @@
 
 > This is just a suggestion so you know where to start, how to implement, feel free to adapt and change as you go
 
-```	sx
+```tsx
 import Link from 'next/link';
 import Image from 'next/image';
-import prisma from '@/lib/prisma';
+import { pool } from '@/lib/db';
 import { Palette } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -37,10 +36,12 @@ export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Categories', description: 'Browse handcrafted products by category.' };
 
 export default async function CategoriesPage() {
-  const categories = await prisma.category.findMany({
-    include: { _count: { select: { products: { where: { status: 'active' } } } } },
-    orderBy: { name: 'asc' },
-  });
+  const { rows: categories } = await pool.query(
+    `SELECT c.*,
+            (SELECT COUNT(*) FROM products WHERE category_id = c.id AND status = 'active') as product_count
+     FROM categories c
+     ORDER BY c.name ASC`
+  );
 
   return (
     <div className="container-app py-8 pb-16">
@@ -50,8 +51,8 @@ export default async function CategoriesPage() {
         {categories.map((cat) => (
           <Link key={cat.id} href={`/shop?category=${cat.slug}`} className="group bg-white rounded-xl overflow-hidden shadow-card hover:shadow-card-hover transition-all hover:-translate-y-1">
             <div className="aspect-[16/10] bg-gradient-to-br from-primary/10 to-accent/10 relative overflow-hidden group-hover:opacity-90 transition-opacity">
-              {cat.imageUrl ? (
-                <Image src={cat.imageUrl} alt={cat.name} fill sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw" className="w-full h-full object-cover" />
+              {cat.image_url ? (
+                <Image src={cat.image_url} alt={cat.name} fill sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw" className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
                   <Palette size={48} className="text-primary/30 group-hover:text-cta transition-colors" />
@@ -61,7 +62,7 @@ export default async function CategoriesPage() {
             <div className="p-5">
               <h2 className="font-display text-lg text-primary uppercase mb-1">{cat.name}</h2>
               <p className="font-body text-sm text-text-muted line-clamp-2 mb-2">{cat.description}</p>
-              <span className="font-ui text-xs text-accent">{cat._count.products} product{cat._count.products !== 1 ? 's' : ''}</span>
+              <span className="font-ui text-xs text-accent">{cat.product_count} product{parseInt(cat.product_count) !== 1 ? 's' : ''}</span>
             </div>
           </Link>
         ))}
@@ -77,14 +78,12 @@ export default async function CategoriesPage() {
 
 > This is just a suggestion so you know where to start, how to implement, feel free to adapt and change as you go
 
-> This is an 87-line server component. Copy the full file from the reference repo: `src/app/seller/[id]/page.tsx`
-
-Key implementation (see reference repo for exact code):
+Key implementation:
 - Server component with `generateMetadata`
 - Custom SVG icon components: `InstagramIcon`, `XIcon`
 - Imports `formatDate` from utils
-- Fetches seller with products, images, category
-- Aggregates stats via `prisma.product.aggregate`
+- Fetches seller with products, images, category using raw SQL via `pool.query`
+- Aggregates stats via `SELECT AVG(avg_rating), COUNT(*)` query
 - Profile card: avatar, name, location, join date, bio, star rating, social links
 - Product grid using `<ProductCard>`
 
@@ -92,16 +91,7 @@ Key implementation (see reference repo for exact code):
 
 ### File 3 — `src/app/about/page.tsx`
 
-> This is just a suggestion so you know where to start, how to implement, feel free to adapt and change as you go
-
-> This is a 112-line server component. Copy the full file from the reference repo: `src/app/about/page.tsx`
-
-Key implementation (see reference repo for exact code):
-- Server component (static content)
-- Sections: Hero (dark green), Our Mission (3-column cards), How It Works (2-column: buyers/sellers), FAQ
-- Icons: Leaf, Heart, Globe, Users, ShieldCheck, Sparkles, ArrowRight
-- FAQ items as card layout with Q/A format
-- CTA: "Start Selling Today" → `/sell`
+> No Prisma dependency — this is a static content page. See original issue description for details.
 
 ---
 
@@ -112,7 +102,7 @@ Key implementation (see reference repo for exact code):
 ```tsx
 import Link from 'next/link';
 import Image from 'next/image';
-import prisma from '@/lib/prisma';
+import { pool } from '@/lib/db';
 import { Store, MapPin } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -120,11 +110,13 @@ export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Our Artisans', description: 'Discover handcrafted goods from local sellers.' };
 
 export default async function SellersDirectoryPage() {
-  const sellers = await prisma.user.findMany({
-    where: { role: 'seller' },
-    include: { _count: { select: { products: { where: { status: 'active' } } } } },
-    orderBy: { createdAt: 'desc' },
-  });
+  const { rows: sellers } = await pool.query(
+    `SELECT u.id, u.name, u.avatar_url, u.location, u.created_at,
+            (SELECT COUNT(*) FROM products WHERE seller_id = u.id AND status = 'active') as product_count
+     FROM users u
+     WHERE u.role = 'seller'
+     ORDER BY u.created_at DESC`
+  );
 
   return (
     <div className="container-app py-8 pb-16">
@@ -134,8 +126,8 @@ export default async function SellersDirectoryPage() {
         {sellers.map((seller) => (
           <Link key={seller.id} href={`/seller/${seller.id}`} className="group bg-white rounded-xl shadow-card p-6 flex flex-col items-center text-center hover:shadow-card-hover transition-all hover:-translate-y-1">
             <div className="w-24 h-24 rounded-full overflow-hidden mb-4 border-4 border-surface">
-              {seller.avatarUrl ? (
-                <Image src={seller.avatarUrl} alt={seller.name} width={96} height={96} className="w-full h-full object-cover" />
+              {seller.avatar_url ? (
+                <Image src={seller.avatar_url} alt={seller.name} width={96} height={96} className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full bg-cta flex items-center justify-center text-3xl font-bold font-ui text-text">
                   {seller.name.charAt(0).toUpperCase()}
@@ -149,7 +141,7 @@ export default async function SellersDirectoryPage() {
               </p>
             )}
             <p className="font-ui text-sm text-accent flex items-center gap-1">
-              <Store size={14} /> {seller._count.products} Products
+              <Store size={14} /> {seller.product_count} Products
             </p>
           </Link>
         ))}
