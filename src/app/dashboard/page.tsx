@@ -80,7 +80,9 @@ export default async function DashboardPage() {
                 <DashboardStats userId={session.user.id} />
             </Suspense>
 
-            <h2 className="text-xl font-bold text-gray-900 mt-20 mb-6 font-title tracking-tight">Quick Actions</h2>
+            <div className="my-12 w-full h-px bg-gray-200"></div>
+
+            <h2 className="text-xl font-bold text-gray-900 mb-6 font-title tracking-tight">Quick Actions</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 <Link href="/dashboard/products/new" className="flex items-center gap-4 p-4 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-300 transition-all group">
                     <div className="bg-gray-100 p-3 rounded-lg text-gray-900 group-hover:scale-110 group-hover:bg-gray-900 group-hover:text-white transition-all duration-300">
