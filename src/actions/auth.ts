@@ -13,9 +13,13 @@ export async function registerAction(data: any) {
     }
 
     try {
-        const existingUser = await db.user.findUnique({
-            where: { email }
-        });
+        // check if user exists
+        const existingUserResult = await db.query(
+            "SELECT id FROM users WHERE email = $1",
+            [email]
+        );
+
+        const existingUser = existingUserResult.rows[0];
 
         if (existingUser) {
             return { error: "Email already in use" };
@@ -23,14 +27,17 @@ export async function registerAction(data: any) {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        await db.user.create({
-            data: {
+        // create user
+        await db.query(
+            `INSERT INTO users (email, name, passwordhash, role)
+             VALUES ($1, $2, $3, $4)`,
+            [
                 email,
-                name: fullName,
-                passwordHash: hashedPassword,
-                role: accountType === "sell" ? "seller" : "buyer"
-            }
-        });
+                fullName,
+                hashedPassword,
+                accountType === "sell" ? "seller" : "buyer",
+            ]
+        );
 
         return { success: true };
     } catch (error) {
@@ -41,9 +48,14 @@ export async function registerAction(data: any) {
 
 export async function loginAction(data: any) {
     try {
-        const user = await db.user.findUnique({
-            where: { email: data.email }
-        });
+        // get user for redirect logic
+        const result = await db.query(
+            "SELECT id, email, role FROM users WHERE email = $1",
+            [data.email]
+        );
+
+        const user = result.rows[0];
+
         const redirectTo = user?.role === "seller" ? "/dashboard" : "/";
 
         await signIn("credentials", {
@@ -51,6 +63,7 @@ export async function loginAction(data: any) {
             password: data.password,
             redirectTo,
         });
+
         return { success: true };
     } catch (error) {
         if (error instanceof AuthError) {
@@ -61,7 +74,7 @@ export async function loginAction(data: any) {
                     return { error: "Something went wrong." };
             }
         }
-        throw error; // Required for Next.js redirects to work from server actions
+        throw error;
     }
 }
 

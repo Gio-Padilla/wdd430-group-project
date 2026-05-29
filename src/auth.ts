@@ -9,59 +9,68 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             name: "Credentials",
             credentials: {
                 email: { label: "Email", type: "email" },
-                password: { label: "Password", type: "password" }
+                password: { label: "Password", type: "password" },
             },
+
             async authorize(credentials) {
                 if (!credentials?.email || !credentials?.password) {
                     return null;
                 }
 
-                const user = await db.user.findUnique({
-                    where: { email: credentials.email as string }
-                });
+                // 🔹 Raw PostgreSQL query (no Prisma)
+                const result = await db.query(
+                    "SELECT id, email, name, role, passwordhash FROM users WHERE email = $1",
+                    [credentials.email]
+                );
 
-                if (!user || !user.passwordHash) {
+                const user = result.rows[0];
+
+                if (!user || !user.passwordhash) {
                     return null;
                 }
 
                 const passwordsMatch = await bcrypt.compare(
                     credentials.password as string,
-                    user.passwordHash
+                    user.passwordhash
                 );
 
-                if (passwordsMatch) {
-                    return {
-                        id: String(user.id),
-                        email: user.email,
-                        name: user.name,
-                        role: user.role,
-                    };
+                if (!passwordsMatch) {
+                    return null;
                 }
 
-                return null;
-            }
-        })
+                return {
+                    id: String(user.id),
+                    email: user.email,
+                    name: user.name,
+                    role: user.role,
+                };
+            },
+        }),
     ],
+
     pages: {
         signIn: "/account",
     },
+
     session: {
         strategy: "jwt",
     },
+
     callbacks: {
         async jwt({ token, user }) {
             if (user) {
                 token.id = user.id;
-                token.role = (user as any).role;
+                token.role = user.role;
             }
             return token;
         },
+
         async session({ session, token }) {
-            if (token && session.user) {
+            if (session.user) {
                 session.user.id = token.id as string;
-                (session.user as any).role = token.role;
+                session.user.role = token.role as string;
             }
             return session;
-        }
-    }
+        },
+    },
 });
