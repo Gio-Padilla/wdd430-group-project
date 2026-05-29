@@ -26,7 +26,7 @@ export default function UserMenu({ user }: { user: any }) {
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 rounded-full border-2 border-black bg-white pl-1 pr-3 py-1 text-sm font-bold text-[#2F4F4F] transition hover:bg-gray-50 hover:shadow-md"
+        className="flex items-center gap-2 rounded-full border-2 border-black bg-white pl-1 pr-3 py-1 text-sm font-bold text-[#2F4F4F] transition hover:bg-gray-50 hover:shadow-md cursor-pointer"
       >
         <div className="flex items-center justify-center w-7 h-7 rounded-full bg-[#F26419] text-white text-xs font-bold">
           {user?.name?.charAt(0).toUpperCase() || "U"}
