@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { LogOut, User as UserIcon, LayoutDashboard } from "lucide-react";
-import { logoutAction } from "@/actions/auth";
+import { logoutAction } from "@/lib/actions/auth";
 
 export default function UserMenu({ user }: { user: any }) {
   const [isOpen, setIsOpen] = useState(false);

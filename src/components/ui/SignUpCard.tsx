@@ -1,6 +1,6 @@
 'use client'
 import { useState } from "react";
-import { registerAction, loginAction } from "@/actions/auth";
+import { registerAction, loginAction } from "@/lib/actions/auth";
 import { Eye, EyeOff, User, Mail, Lock, Store, ShoppingBag } from "lucide-react";
 
 export default function SignUpCard({ accountType, setAccountType }: { accountType: "buy" | "sell", setAccountType: (type: "buy" | "sell") => void }) {
