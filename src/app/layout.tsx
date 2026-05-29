@@ -6,6 +6,7 @@ import "./globals.css";
 import Header from "@/components/ui/Header";
 import Footer from "@/components/ui/Footer";
 import GlobalToast from "@/components/ui/GlobalToast";
+import { ToastProvider } from "@/components/providers/ToastProvider";
 
 const aladin = Aladin({
   subsets: ["latin"],
@@ -54,13 +55,15 @@ export default function RootLayout({
         antialiased
       `}
     >
-      <body className="flex min-h-screen flex-col bg-[#DCDCDC] text-[#000000]">
-        <GlobalToast />
-        <Header />
+      <body suppressHydrationWarning className="flex min-h-screen flex-col bg-[#DCDCDC] text-[#000000]">
+        <ToastProvider>
+          <GlobalToast />
+          <Header />
 
-        <main className="flex-1">{children}</main>
+          <main className="flex-1">{children}</main>
 
-        <Footer />
+          <Footer />
+        </ToastProvider>
       </body>
     </html>
   );
