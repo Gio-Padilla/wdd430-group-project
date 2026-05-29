@@ -10,9 +10,9 @@ interface CloudinaryUploadButtonProps {
 export default function CloudinaryUploadButton({ onUpload }: CloudinaryUploadButtonProps) {
     return (
         <CldUploadWidget 
-            uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "upload_preset_eletrico"}
+            uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET}
             options={{
-                cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dyqyb9ri8"
+                cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
             }}
             onSuccess={(result) => {
                 onUpload(result);
