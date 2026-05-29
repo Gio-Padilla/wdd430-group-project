@@ -25,7 +25,7 @@ export default function Footer() {
             Handmade goods crafted with care, creativity, and passion.
           </p>
 
-          <p className="mt-4 text-sm text-[#F26419]">
+          <p className="mt-4 text-sm text-[#FFB38A]">
             Small batch • Artisan made • Unique designs
           </p>
         </div>
@@ -37,10 +37,10 @@ export default function Footer() {
           </h3>
 
           <div className="mt-4 flex flex-col gap-2 text-white/80">
-            <Link className="hover:text-[#F26419]" href="/">Home</Link>
-            <Link className="hover:text-[#F26419]" href="/products">Products</Link>
-            <Link className="hover:text-[#F26419]" href="/about">About</Link>
-            <Link className="hover:text-[#F26419]" href="/contact">Contact</Link>
+            <Link className="hover:text-[#FFB38A]" href="/">Home</Link>
+            <Link className="hover:text-[#FFB38A]" href="/products">Products</Link>
+            <Link className="hover:text-[#FFB38A]" href="/about">About</Link>
+            <Link className="hover:text-[#FFB38A]" href="/contact">Contact</Link>
           </div>
         </div>
 

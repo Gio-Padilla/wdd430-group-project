@@ -64,7 +64,7 @@ export default async function Header() {
 
         {/* Desktop Right: Cart & Account Button */}
         <div className="hidden md:flex items-center gap-4 justify-end">
-          <Link href="/cart" className="relative p-2 text-[#2F4F4F] hover:text-[#F26419] transition cursor-pointer" aria-label="Shopping Cart">
+          <Link href="/cart" className="relative p-2 text-[#2F4F4F] hover:text-[#B03F08] transition cursor-pointer" aria-label="Shopping Cart">
             <ShoppingCart className="w-6 h-6" />
           </Link>
           {session ? (
@@ -72,7 +72,7 @@ export default async function Header() {
           ) : (
             <Link
               href="/account?mode=login"
-              className="rounded-lg border-2 border-black bg-[#2F4F4F] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#F26419] hover:shadow-md cursor-pointer"
+              className="rounded-lg border-2 border-black bg-[#2F4F4F] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#B03F08] hover:shadow-md cursor-pointer"
             >
               Account
             </Link>
