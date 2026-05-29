@@ -34,7 +34,7 @@ export default async function DashboardProductsPage() {
         </div>
         <Link 
           href="/dashboard/products/new"
-          className="inline-flex items-center gap-2 bg-gray-900 text-white px-5 py-2.5 rounded-lg hover:bg-gray-800 transition-all text-sm font-medium shadow-sm hover:shadow active:scale-95"
+          className="inline-flex items-center gap-2 bg-gray-900 text-white px-5 py-2.5 rounded-lg hover:bg-gray-800 transition-all text-sm font-medium shadow-sm hover:shadow active:scale-95 cursor-pointer"
         >
           <Plus size={18} /> New Listing
         </Link>
@@ -105,10 +105,10 @@ export default async function DashboardProductsPage() {
                       </Badge>
                     </td>
                     <td className="px-3 sm:px-6 py-4 text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-1 sm:gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center justify-end gap-1 sm:gap-2">
                         <Link 
                           href={`/dashboard/products/${product.id}/edit`}
-                          className="inline-flex items-center gap-1 text-gray-600 hover:text-gray-900 transition-colors bg-white border border-gray-200 hover:bg-gray-50 px-2 sm:px-3 py-1.5 rounded-md shadow-sm"
+                          className="inline-flex items-center gap-1 text-gray-600 hover:text-gray-900 transition-colors bg-white border border-gray-200 hover:bg-gray-50 px-2 sm:px-3 py-1.5 rounded-md shadow-sm cursor-pointer"
                         >
                           <Edit size={14} /> <span className="hidden sm:inline">Edit</span>
                         </Link>
