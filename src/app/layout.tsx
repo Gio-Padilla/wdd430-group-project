@@ -54,7 +54,7 @@ export default function RootLayout({
         antialiased
       `}
     >
-      <body className="flex min-h-screen flex-col bg-[#DCDCDC] text-[#000000]">
+      <body suppressHydrationWarning className="flex min-h-screen flex-col bg-[#DCDCDC] text-[#000000]">
         <GlobalToast />
         <Header />
 
