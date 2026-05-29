@@ -37,10 +37,10 @@ export default function DeleteProductButton({ productId }: { productId: number }
     <button 
       onClick={handleDelete}
       disabled={isDeleting}
-      className="inline-flex items-center gap-1 text-red-600/80 hover:text-red-600 font-ui text-sm transition-colors disabled:opacity-50"
+      className="inline-flex items-center gap-1 text-red-600 hover:text-red-700 transition-colors bg-white border border-gray-200 hover:bg-red-50 px-3 py-1.5 rounded-md shadow-sm disabled:opacity-50"
       aria-label="Delete Product"
     >
-      <Trash2 size={14} /> Delete
+      <Trash2 size={14} /> <span className="hidden sm:inline">Delete</span>
     </button>
   );
 }
