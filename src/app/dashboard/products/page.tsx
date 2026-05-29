@@ -62,10 +62,10 @@ export default async function DashboardProductsPage() {
               <thead className="bg-gray-50/80 text-gray-600 border-b border-gray-100 backdrop-blur-md sticky top-0 z-10">
                 <tr>
                   <th className="px-6 py-4 font-semibold">Item</th>
-                  <th className="px-6 py-4 font-semibold">Category</th>
+                  <th className="hidden sm:table-cell px-6 py-4 font-semibold">Category</th>
                   <th className="px-6 py-4 font-semibold">Price</th>
-                  <th className="px-6 py-4 font-semibold">Stock</th>
-                  <th className="px-6 py-4 font-semibold">Status</th>
+                  <th className="hidden md:table-cell px-6 py-4 font-semibold">Stock</th>
+                  <th className="hidden sm:table-cell px-6 py-4 font-semibold">Status</th>
                   <th className="px-6 py-4 font-semibold text-right">Actions</th>
                 </tr>
               </thead>
@@ -84,19 +84,19 @@ export default async function DashboardProductsPage() {
                           )}
                         </div>
                         <div>
-                          <div className="font-semibold text-gray-900 text-base">{product.title}</div>
+                          <div className="font-semibold text-gray-900 text-base max-w-[150px] sm:max-w-xs truncate">{product.title}</div>
                           <div className="text-xs text-gray-400 font-medium">SKU: {String(product.id).padStart(6, '0')}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-gray-600 font-medium">{product.category_name}</td>
+                    <td className="hidden sm:table-cell px-6 py-4 text-gray-600 font-medium">{product.category_name}</td>
                     <td className="px-6 py-4 font-semibold text-gray-900">${Number(product.price).toFixed(2)}</td>
-                    <td className="px-6 py-4 text-gray-600">
+                    <td className="hidden md:table-cell px-6 py-4 text-gray-600">
                         <span className={`inline-flex items-center justify-center px-2 py-1 rounded-md text-xs font-bold ${product.inventory_qty > 0 ? 'bg-gray-100 text-gray-700' : 'bg-red-50 text-red-700'}`}>
                             {product.inventory_qty} in stock
                         </span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="hidden sm:table-cell px-6 py-4">
                       <Badge variant={
                         product.status === 'active' ? 'success' : 
                         product.status === 'draft' ? 'default' : 'error'
