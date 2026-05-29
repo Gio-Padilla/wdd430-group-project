@@ -11,7 +11,7 @@ export default function Home() {
 
           {/* Left content of the hero */}
           <div>
-            <p className="mb-3 text-sm font-bold uppercase tracking-[0.3em] text-[#B03F08]">
+            <p className="mb-3 text-sm font-bold uppercase tracking-[0.3em] text-[#F26419]">
               Handmade • Artisan • Unique
             </p>
 
@@ -21,7 +21,7 @@ export default function Home() {
               Haven
             </h1>
 
-            <p className="mb-8 max-w-xl text-lg text-gray-800">
+            <p className="mb-8 max-w-xl text-lg text-black/75">
               Discover beautifully handmade goods crafted with care.
               From candles and ceramics to artisan decor, every item
               tells a story.
@@ -34,14 +34,14 @@ export default function Home() {
                   rounded-lg
                   border-2
                   border-black
-                  bg-[#B03F08]
+                  bg-[#F26419]
                   px-6
                   py-3
                   font-bold
                   text-white
                   transition
                   hover:scale-105
-                  hover:bg-[#8A3106]
+                  hover:bg-[#d95515]
                 "
               >
                 Shop Collection
@@ -92,7 +92,7 @@ export default function Home() {
               Featured Categories
             </h2>
 
-            <p className="mx-auto max-w-2xl text-gray-800">
+            <p className="mx-auto max-w-2xl text-black/70">
               Explore handcrafted collections designed to bring warmth,
               personality, and artistry into your home.
             </p>
@@ -118,13 +118,13 @@ export default function Home() {
                   Candles
                 </h3>
 
-                <p className="mb-6 text-gray-800">
+                <p className="mb-6 text-black/70">
                   Cozy handcrafted candles with artisan scents and warm ambiance.
                 </p>
 
                 <Link
                   href="/products"
-                  className="font-bold text-[#B03F08] hover:underline"
+                  className="font-bold text-[#F26419] hover:underline"
                 >
                   Browse Collection →
                 </Link>
@@ -149,13 +149,13 @@ export default function Home() {
                   Ceramics
                 </h3>
 
-                <p className="mb-6 text-gray-800">
+                <p className="mb-6 text-black/70">
                   Beautiful mugs, bowls, and pottery made with timeless craftsmanship.
                 </p>
 
                 <Link
                   href="/products"
-                  className="font-bold text-[#B03F08] hover:underline"
+                  className="font-bold text-[#F26419] hover:underline"
                 >
                   Browse Collection →
                 </Link>
@@ -179,13 +179,13 @@ export default function Home() {
                   Home Decor
                 </h3>
 
-                <p className="mb-6 text-gray-800">
+                <p className="mb-6 text-black/70">
                   Unique artisan accents designed to make your space feel personal.
                 </p>
 
                 <Link
                   href="/products"
-                  className="font-bold text-[#B03F08] hover:underline"
+                  className="font-bold text-[#F26419] hover:underline"
                 >
                   Browse Collection →
                 </Link>
@@ -212,7 +212,7 @@ export default function Home() {
           </div>
 
           <div>
-            <p className="mb-3 text-sm font-bold uppercase tracking-[0.3em] text-[#FFB38A]">
+            <p className="mb-3 text-sm font-bold uppercase tracking-[0.3em] text-[#F26419]">
               Our Story
             </p>
 
@@ -220,7 +220,7 @@ export default function Home() {
               Crafted with Passion
             </h2>
 
-            <p className="mb-6 text-lg text-gray-100">
+            <p className="mb-6 text-lg text-white/80">
               Handcrafted Haven was created to celebrate artisanship,
               creativity, and meaningful design. Every product is carefully
               selected or handmade with attention to quality and detail.
@@ -256,7 +256,7 @@ export default function Home() {
             Ready to Discover Something Unique?
           </h2>
 
-          <p className="mb-8 text-lg text-gray-800">
+          <p className="mb-8 text-lg text-black/70">
             Browse our growing collection of handmade goods and artisan creations.
           </p>
 
@@ -267,7 +267,7 @@ export default function Home() {
               rounded-xl
               border-2
               border-black
-              bg-[#B03F08]
+              bg-[#F26419]
               px-8
               py-4
               text-lg
@@ -275,7 +275,7 @@ export default function Home() {
               text-white
               transition
               hover:scale-105
-              hover:bg-[#8A3106]
+              hover:bg-[#d95515]
             "
           >
             Explore Products
