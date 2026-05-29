@@ -2,35 +2,37 @@
 import { useState } from "react";
 import { registerAction, loginAction } from "@/lib/actions/auth";
 import { Eye, EyeOff, User, Mail, Lock, Store, ShoppingBag } from "lucide-react";
+import { useToast } from "@/components/providers/ToastProvider";
 
 export default function SignUpCard({ accountType, setAccountType }: { accountType: "buy" | "sell", setAccountType: (type: "buy" | "sell") => void }) {
+    const { showToast } = useToast();
     const [fullName, setFullName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [error, setError] = useState<string | null>(null);
 
     const handleSignUp = async (e: React.FormEvent) => {
         e.preventDefault();
-        setError(null);
 
         if (password !== confirmPassword) {
-            setError("Passwords do not match.");
+            showToast("Passwords do not match.", 'error');
             return;
         }
 
         const result = await registerAction({ email, password, fullName, accountType });
         if (result?.error) {
-            setError(result.error);
+            showToast(result.error, 'error');
             return;
         }
 
         // Auto login after successful registration
         const loginResult = await loginAction({ email, password });
         if (loginResult?.error) {
-            setError(loginResult.error);
+            showToast(loginResult.error, 'error');
+        } else {
+            showToast('Account created successfully!', 'success');
         }
     }
 
@@ -40,11 +42,6 @@ export default function SignUpCard({ accountType, setAccountType }: { accountTyp
                 <h2 className="text-2xl font-bold uppercase text-gray-900 tracking-wide">Sign Up</h2>
                 <p className="text-base text-gray-600 mt-1">Create an account to get started</p>
             </div>
-            {error && (
-                <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm border border-red-200">
-                    {error}
-                </div>
-            )}
             <form className="text-base flex p-4 flex-col gap-6 w-full" onSubmit={(e) => handleSignUp(e)}>
                 <div className="grid gap-2">
                     <label className="font-semibold text-gray-900">I want to</label>

@@ -3,7 +3,7 @@ import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import Badge from '@/components/ui/Badge';
-import DeleteProductButton from './DeleteProductButton';
+import DeleteProductButton from '@/components/dashboard/DeleteProductButton';
 import { Plus, Edit } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
