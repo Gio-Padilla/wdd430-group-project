@@ -6,14 +6,29 @@ import Badge from '@/components/ui/Badge';
 import DeleteProductButton from '@/components/dashboard/DeleteProductButton';
 import { Plus, Edit, Image as ImageIcon } from 'lucide-react';
 
+import Pagination from '@/components/ui/Pagination';
+
 export const dynamic = 'force-dynamic';
 
-export default async function DashboardProductsPage() {
+export default async function DashboardProductsPage(props: { searchParams: Promise<{ page?: string }> }) {
+  const searchParams = await props.searchParams;
+  const currentPage = Number(searchParams?.page) || 1;
+  const pageSize = 5;
+  const offset = (currentPage - 1) * pageSize;
+
   const session = await auth();
 
   if (!session?.user || session.user.role !== 'seller') {
     redirect('/');
   }
+
+  const { rows: countResult } = await db.query(
+    `SELECT COUNT(*) FROM products WHERE seller_id = $1`,
+    [session.user.id]
+  );
+  
+  const totalProducts = parseInt(countResult[0].count, 10);
+  const totalPages = Math.ceil(totalProducts / pageSize);
 
   const { rows: products } = await db.query(
     `SELECT p.*, c.name as category_name, 
@@ -21,8 +36,9 @@ export default async function DashboardProductsPage() {
      FROM products p 
      LEFT JOIN categories c ON p.category_id = c.id
      WHERE p.seller_id = $1
-     ORDER BY p.created_at DESC`,
-    [session.user.id]
+     ORDER BY p.created_at DESC
+     LIMIT $2 OFFSET $3`,
+    [session.user.id, pageSize, offset]
   );
 
   return (
@@ -120,6 +136,12 @@ export default async function DashboardProductsPage() {
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+      
+      {totalPages > 1 && (
+        <div className="mt-5 flex w-full justify-center">
+          <Pagination totalPages={totalPages} />
         </div>
       )}
     </div>
