@@ -1,20 +1,13 @@
 # Issue 14 — Product & Review Server Actions
 
-**Suggested Branch:** `[YOUR-INITIALS]-issue-14-product-review-server`
+**Suggested Branch:** `[YOUR-INITIALS]-issue-14-product-review-actions`
 
+> ⚠️ **Updated:** All database queries now use raw SQL via the `pg` driver. Prisma has been removed from the project. Schema is at `src/db/schema.sql`.
 
-> **User Story:** As a customer, I want to leave a rating and a written review for a purchased item so that I can share my experience and help other buyers.
-> **Acceptance Criteria:** Review forms must include a star rating (1-5) and a text area; reviews must be visible on the specific product page.
-
-
-> **User Story:** As an artisan, I want to upload product details (price, description, images) so that my items are visible in the marketplace catalog.
-> **Acceptance Criteria:** Sellers can save a listing; the listing must display correctly in the public gallery with a "Purchase" or "Contact" trigger.
-
-
-**Labels:** `feature`, `backend` | **Priority:** 🟡 High | **Depends on:** Issue 04
+**Labels:** `feature`, `backend` | **Priority:** 🟡 High | **Depends on:** Issues 04, 12
 
 ## Checklist
-- [ ] **Prerequisite:** Ensure Issue 04 are completed.
+- [ ] **Prerequisite:** Ensure Issues 04, 12 are completed.
 - [ ] Create `src/lib/actions/products.ts`
 - [ ] Create `src/lib/actions/reviews.ts`
 
@@ -24,66 +17,67 @@
 
 > This is just a suggestion so you know where to start, how to implement, feel free to adapt and change as you go
 
-```	s
+```ts
 'use server';
 
-import prisma from '@/lib/prisma';
+import { pool } from '@/lib/db';
 import { auth } from '@/auth';
-import { slugify } from '@/lib/utils';
 import { revalidatePath } from 'next/cache';
+
+function slugify(text: string) {
+  return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+}
 
 export async function createProductAction(data) {
   try {
     const session = await auth();
     if (!session?.user || session.user.role !== 'seller') {
-      return { success: false, error: 'Unauthorized' };
+      return { success: false, error: 'Only sellers can create products' };
     }
 
-    const { title, description, price, categoryId, tags, inventoryQty, images, status } = data;
+    const { title, description, price, categoryId, tags, inventoryQty, status, images } = data;
 
     if (!title || !description || !price || !categoryId) {
       return { success: false, error: 'Title, description, price, and category are required' };
     }
 
-    // Generate unique slug
-    let slug = slugify(title);
-    const existingSlug = await prisma.product.findUnique({ where: { slug } });
-    if (existingSlug) {
-      slug = `${slug}-${Date.now()}`;
+    const slug = slugify(title);
+    const client = await pool.connect();
+
+    try {
+      await client.query('BEGIN');
+
+      const { rows } = await client.query(
+        `INSERT INTO products (seller_id, category_id, title, slug, description, price, inventory_qty, status, tags)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+         RETURNING id, slug`,
+        [session.user.id, parseInt(categoryId), title, slug, description, parseFloat(price),
+         parseInt(inventoryQty) || 0, status || 'draft', tags || []]
+      );
+
+      const productId = rows[0].id;
+
+      if (images && images.length > 0) {
+        for (let i = 0; i < images.length; i++) {
+          await client.query(
+            `INSERT INTO product_images (product_id, url, public_id, display_order, is_primary)
+             VALUES ($1, $2, $3, $4, $5)`,
+            [productId, images[i].url, images[i].publicId || null, i, i === 0]
+          );
+        }
+      }
+
+      await client.query('COMMIT');
+
+      revalidatePath('/shop');
+      revalidatePath('/dashboard/products');
+      return { success: true, data: { id: productId, slug: rows[0].slug } };
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
     }
-
-    const product = await prisma.product.create({
-      data: {
-        sellerId: session.user.id,
-        categoryId: parseInt(categoryId),
-        title,
-        slug,
-        description,
-        price: parseFloat(price),
-        inventoryQty: parseInt(inventoryQty) || 0,
-        tags: tags || [],
-        status: status || 'active',
-        images: images?.length
-          ? {
-              create: images.map((img, i) => ({
-                url: img.url,
-                publicId: img.publicId || null,
-                displayOrder: i,
-                isPrimary: i === 0,
-              })),
-            }
-          : undefined,
-      },
-      include: {
-        images: true,
-        category: true,
-        seller: { select: { id: true, name: true } },
-      },
-    });
-
-    revalidatePath('/shop');
-    revalidatePath('/dashboard/products');
-    return { success: true, data: product };
   } catch (error) {
     console.error('createProductAction error:', error);
     return { success: false, error: 'Internal server error' };
@@ -93,55 +87,65 @@ export async function createProductAction(data) {
 export async function updateProductAction(id, data) {
   try {
     const session = await auth();
-    if (!session?.user) {
-      return { success: false, error: 'Unauthorized' };
-    }
+    if (!session?.user) return { success: false, error: 'Unauthorized' };
 
     const productId = parseInt(id);
 
-    const product = await prisma.product.findUnique({ where: { id: productId } });
-    if (!product || product.sellerId !== session.user.id) {
+    const { rows: existing } = await pool.query(
+      'SELECT id, seller_id, slug FROM products WHERE id = $1', [productId]
+    );
+    if (existing.length === 0 || existing[0].seller_id !== session.user.id) {
       return { success: false, error: 'Not found or unauthorized' };
     }
 
     const { title, description, price, categoryId, tags, inventoryQty, status, images } = data;
 
-    const updated = await prisma.product.update({
-      where: { id: productId },
-      data: {
-        ...(title && { title }),
-        ...(description && { description }),
-        ...(price && { price: parseFloat(price) }),
-        ...(categoryId && { categoryId: parseInt(categoryId) }),
-        ...(tags && { tags }),
-        ...(inventoryQty !== undefined && { inventoryQty: parseInt(inventoryQty) }),
-        ...(status && { status }),
-      },
-      include: {
-        images: true,
-        category: true,
-      },
-    });
+    const sets: string[] = [];
+    const vals: any[] = [];
+    let i = 1;
 
-    // Handle images if provided
-    if (images) {
-      await prisma.productImage.deleteMany({ where: { productId } });
-      await prisma.productImage.createMany({
-        data: images.map((img, i) => ({
-          productId,
-          url: img.url,
-          publicId: img.publicId || null,
-          displayOrder: i,
-          isPrimary: i === 0,
-        })),
-      });
+    if (title) { sets.push(`title = $${i++}`); vals.push(title); }
+    if (description) { sets.push(`description = $${i++}`); vals.push(description); }
+    if (price) { sets.push(`price = $${i++}`); vals.push(parseFloat(price)); }
+    if (categoryId) { sets.push(`category_id = $${i++}`); vals.push(parseInt(categoryId)); }
+    if (tags) { sets.push(`tags = $${i++}`); vals.push(tags); }
+    if (inventoryQty !== undefined) { sets.push(`inventory_qty = $${i++}`); vals.push(parseInt(inventoryQty)); }
+    if (status) { sets.push(`status = $${i++}`); vals.push(status); }
+
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      if (sets.length > 0) {
+        vals.push(productId);
+        await client.query(
+          `UPDATE products SET ${sets.join(', ')} WHERE id = $${i}`, vals
+        );
+      }
+
+      if (images) {
+        await client.query('DELETE FROM product_images WHERE product_id = $1', [productId]);
+        for (let j = 0; j < images.length; j++) {
+          await client.query(
+            `INSERT INTO product_images (product_id, url, public_id, display_order, is_primary)
+             VALUES ($1, $2, $3, $4, $5)`,
+            [productId, images[j].url, images[j].publicId || null, j, j === 0]
+          );
+        }
+      }
+
+      await client.query('COMMIT');
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
     }
 
     revalidatePath('/shop');
-    revalidatePath(`/shop/${product.slug}`);
+    revalidatePath(`/shop/${existing[0].slug}`);
     revalidatePath('/dashboard/products');
-    revalidatePath(`/dashboard/products/${productId}/edit`);
-    return { success: true, data: updated };
+    return { success: true };
   } catch (error) {
     console.error('updateProductAction error:', error);
     return { success: false, error: 'Internal server error' };
@@ -151,18 +155,18 @@ export async function updateProductAction(id, data) {
 export async function deleteProductAction(id) {
   try {
     const session = await auth();
-    if (!session?.user) {
-      return { success: false, error: 'Unauthorized' };
-    }
+    if (!session?.user) return { success: false, error: 'Unauthorized' };
 
     const productId = parseInt(id);
 
-    const product = await prisma.product.findUnique({ where: { id: productId } });
-    if (!product || product.sellerId !== session.user.id) {
+    const { rows } = await pool.query(
+      'SELECT id, seller_id FROM products WHERE id = $1', [productId]
+    );
+    if (rows.length === 0 || rows[0].seller_id !== session.user.id) {
       return { success: false, error: 'Not found or unauthorized' };
     }
 
-    await prisma.product.delete({ where: { id: productId } });
+    await pool.query('DELETE FROM products WHERE id = $1', [productId]);
 
     revalidatePath('/shop');
     revalidatePath('/dashboard/products');
@@ -180,97 +184,77 @@ export async function deleteProductAction(id) {
 
 > This is just a suggestion so you know where to start, how to implement, feel free to adapt and change as you go
 
-```	s
+```ts
 'use server';
 
-import prisma from '@/lib/prisma';
+import { pool } from '@/lib/db';
 import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
 
 export async function createReviewAction(data) {
   try {
     const session = await auth();
-    if (!session?.user) {
-      return { success: false, error: 'Must be logged in to review' };
-    }
+    if (!session?.user) return { success: false, error: 'Must be logged in to review' };
 
     const { productId, rating, comment, orderItemId } = data;
 
     if (!productId || !rating || !comment || !orderItemId) {
-      return {
-        success: false,
-        error: 'Product ID, order item ID, rating, and comment are required',
-      };
+      return { success: false, error: 'Product ID, order item ID, rating, and comment are required' };
     }
-
     if (rating < 1 || rating > 5) {
-      return {
-        success: false,
-        error: 'Rating must be between 1 and 5',
-      };
+      return { success: false, error: 'Rating must be between 1 and 5' };
     }
 
-    // Verify the order item belongs to the user and hasn't been reviewed
-    const orderItem = await prisma.orderItem.findUnique({
-      where: { id: parseInt(orderItemId) },
-      include: { order: true, review: true },
-    });
+    // Verify order item belongs to user and hasn't been reviewed
+    const { rows: oiRows } = await pool.query(
+      `SELECT oi.id, oi.product_id, o.user_id
+       FROM order_items oi
+       JOIN orders o ON o.id = oi.order_id
+       WHERE oi.id = $1`,
+      [parseInt(orderItemId)]
+    );
 
-    if (!orderItem || orderItem.order.userId !== session.user.id || orderItem.productId !== parseInt(productId)) {
-      return {
-        success: false,
-        error: 'Invalid order item or unauthorized',
-      };
+    if (oiRows.length === 0 || oiRows[0].user_id !== session.user.id || oiRows[0].product_id !== parseInt(productId)) {
+      return { success: false, error: 'Invalid order item or unauthorized' };
     }
 
-    if (orderItem.review) {
-      return {
-        success: false,
-        error: 'You have already reviewed this specific purchase',
-      };
+    const { rows: existingReview } = await pool.query(
+      'SELECT id FROM reviews WHERE order_item_id = $1', [parseInt(orderItemId)]
+    );
+    if (existingReview.length > 0) {
+      return { success: false, error: 'You have already reviewed this specific purchase' };
     }
 
-    // Check that user isn't reviewing own product
-    const product = await prisma.product.findUnique({ where: { id: parseInt(productId) } });
-    if (product?.sellerId === session.user.id) {
-      return {
-        success: false,
-        error: 'You cannot review your own product',
-      };
+    // Check user isn't reviewing own product
+    const { rows: productRows } = await pool.query(
+      'SELECT seller_id, slug FROM products WHERE id = $1', [parseInt(productId)]
+    );
+    if (productRows[0]?.seller_id === session.user.id) {
+      return { success: false, error: 'You cannot review your own product' };
     }
 
     // Create review
-    const review = await prisma.review.create({
-      data: {
-        productId: parseInt(productId),
-        userId: session.user.id,
-        orderItemId: parseInt(orderItemId),
-        rating: parseInt(rating),
-        comment,
-      },
-      include: {
-        user: { select: { id: true, name: true, avatarUrl: true } },
-      },
-    });
+    const { rows: reviewRows } = await pool.query(
+      `INSERT INTO reviews (product_id, user_id, order_item_id, rating, comment)
+       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [parseInt(productId), session.user.id, parseInt(orderItemId), parseInt(rating), comment]
+    );
 
     // Update product avg rating
-    const stats = await prisma.review.aggregate({
-      where: { productId: parseInt(productId) },
-      _avg: { rating: true },
-      _count: true,
-    });
+    const { rows: stats } = await pool.query(
+      `SELECT AVG(rating) as avg_rating, COUNT(*) as review_count
+       FROM reviews WHERE product_id = $1`,
+      [parseInt(productId)]
+    );
 
-    await prisma.product.update({
-      where: { id: parseInt(productId) },
-      data: {
-        avgRating: stats._avg.rating || 0,
-        reviewCount: stats._count,
-      },
-    });
+    await pool.query(
+      `UPDATE products SET avg_rating = $1, review_count = $2 WHERE id = $3`,
+      [parseFloat(stats[0].avg_rating) || 0, parseInt(stats[0].review_count), parseInt(productId)]
+    );
 
     revalidatePath('/account');
-    revalidatePath(`/shop/${product?.slug}`);
-    return { success: true, data: review };
+    revalidatePath(`/shop/${productRows[0]?.slug}`);
+    return { success: true, data: reviewRows[0] };
   } catch (error) {
     console.error('createReviewAction error:', error);
     return { success: false, error: 'Internal server error' };
@@ -280,46 +264,33 @@ export async function createReviewAction(data) {
 export async function replyToReviewAction(reviewId, sellerReply) {
   try {
     const session = await auth();
-    if (!session?.user) {
-      return { success: false, error: 'Unauthorized' };
-    }
+    if (!session?.user) return { success: false, error: 'Unauthorized' };
 
     const rId = parseInt(reviewId, 10);
-    if (isNaN(rId)) {
-      return { success: false, error: 'Invalid review ID' };
-    }
+    if (isNaN(rId)) return { success: false, error: 'Invalid review ID' };
+    if (sellerReply === undefined) return { success: false, error: 'sellerReply is required' };
 
-    if (sellerReply === undefined) {
-      return { success: false, error: 'sellerReply is required' };
-    }
+    const { rows: reviewRows } = await pool.query(
+      `SELECT r.id, p.seller_id, p.slug
+       FROM reviews r
+       JOIN products p ON p.id = r.product_id
+       WHERE r.id = $1`,
+      [rId]
+    );
 
-    // Check if review exists and get the product's seller ID
-    const review = await prisma.review.findUnique({
-      where: { id: rId },
-      include: { product: true },
-    });
-
-    if (!review) {
-      return { success: false, error: 'Review not found' };
-    }
-
-    if (review.product.sellerId !== session.user.id) {
+    if (reviewRows.length === 0) return { success: false, error: 'Review not found' };
+    if (reviewRows[0].seller_id !== session.user.id) {
       return { success: false, error: 'Forbidden. Only the seller can reply to this review.' };
     }
 
-    const updatedReview = await prisma.review.update({
-      where: { id: rId },
-      data: {
-        sellerReply: sellerReply === '' ? null : sellerReply,
-        sellerReplyAt: sellerReply === '' ? null : new Date(),
-      },
-      include: {
-        user: { select: { id: true, name: true, avatarUrl: true } }
-      }
-    });
+    const { rows: updated } = await pool.query(
+      `UPDATE reviews SET seller_reply = $1, seller_reply_at = $2
+       WHERE id = $3 RETURNING *`,
+      [sellerReply === '' ? null : sellerReply, sellerReply === '' ? null : new Date(), rId]
+    );
 
-    revalidatePath(`/shop/${review.product.slug}`);
-    return { success: true, data: updatedReview };
+    revalidatePath(`/shop/${reviewRows[0].slug}`);
+    return { success: true, data: updated[0] };
   } catch (error) {
     console.error('replyToReviewAction error:', error);
     return { success: false, error: 'Internal server error' };

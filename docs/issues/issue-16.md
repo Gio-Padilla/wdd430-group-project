@@ -2,6 +2,7 @@
 
 **Suggested Branch:** `[YOUR-INITIALS]-issue-16-api-routes-products`
 
+> ⚠️ **Updated:** All database queries now use raw SQL via the `pg` driver. Prisma has been removed from the project. Schema is at `src/db/schema.sql`.
 
 **Labels:** `feature`, `backend` | **Priority:** 🟡 High | **Depends on:** Issue 04
 
@@ -16,13 +17,9 @@
 
 ### File 1 — `src/app/api/products/route.ts`
 
-> This is just a suggestion so you know where to start, how to implement, feel free to adapt and change as you go
-
-> Public GET endpoint for the product listing page. Supports pagination, search, filtering, and sorting.
-
-```	s
+```ts
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { pool } from '@/lib/db';
 
 export async function GET(request) {
   try {
@@ -37,57 +34,58 @@ export async function GET(request) {
     const minRating = searchParams.get('minRating');
     const sellerId = searchParams.get('sellerId');
 
-    // Build where clause
-    const where = { status: 'active' };
+    // Build dynamic WHERE clause
+    const conditions: string[] = [`p.status = 'active'`];
+    const vals: any[] = [];
+    let i = 1;
 
-    if (category) {
-      where.category = { slug: category };
-    }
+    if (category) { conditions.push(`c.slug = $${i++}`); vals.push(category); }
     if (search) {
-      where.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
-        { tags: { has: search.toLowerCase() } },
-      ];
+      conditions.push(`(p.title ILIKE $${i} OR p.description ILIKE $${i} OR $${i+1} = ANY(p.tags))`);
+      vals.push(`%${search}%`); i++;
+      vals.push(search.toLowerCase()); i++;
     }
-    if (minPrice || maxPrice) {
-      where.price = {};
-      if (minPrice) (where.price).gte = parseFloat(minPrice);
-      if (maxPrice) (where.price).lte = parseFloat(maxPrice);
-    }
-    if (minRating) {
-      where.avgRating = { gte: parseFloat(minRating) };
-    }
-    if (sellerId) {
-      where.sellerId = parseInt(sellerId);
-    }
+    if (minPrice) { conditions.push(`p.price >= $${i++}`); vals.push(parseFloat(minPrice)); }
+    if (maxPrice) { conditions.push(`p.price <= $${i++}`); vals.push(parseFloat(maxPrice)); }
+    if (minRating) { conditions.push(`p.avg_rating >= $${i++}`); vals.push(parseFloat(minRating)); }
+    if (sellerId) { conditions.push(`p.seller_id = $${i++}`); vals.push(parseInt(sellerId)); }
 
-    // Build orderBy
-    let orderBy = { createdAt: 'desc' };
-    if (sort === 'price_asc') orderBy = { price: 'asc' };
-    else if (sort === 'price_desc') orderBy = { price: 'desc' };
-    else if (sort === 'rating') orderBy = { avgRating: 'desc' };
-    else if (sort === 'newest') orderBy = { createdAt: 'desc' };
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
-    const [items, total] = await Promise.all([
-      prisma.product.findMany({
-        where,
-        orderBy,
-        skip: (page - 1) * pageSize,
-        take: pageSize,
-        include: {
-          images: { orderBy: { displayOrder: 'asc' }, take: 1 },
-          seller: { select: { id: true, name: true, avatarUrl: true } },
-          category: { select: { id: true, name: true, slug: true } },
-        },
-      }),
-      prisma.product.count({ where }),
+    let orderBy = 'p.created_at DESC';
+    if (sort === 'price_asc') orderBy = 'p.price ASC';
+    else if (sort === 'price_desc') orderBy = 'p.price DESC';
+    else if (sort === 'rating') orderBy = 'p.avg_rating DESC';
+
+    const offset = (page - 1) * pageSize;
+
+    const [itemsResult, countResult] = await Promise.all([
+      pool.query(
+        `SELECT p.*, c.name as category_name, c.slug as category_slug,
+                s.id as seller_id, s.name as seller_name, s.avatar_url as seller_avatar,
+                (SELECT url FROM product_images WHERE product_id = p.id ORDER BY display_order ASC LIMIT 1) as image_url
+         FROM products p
+         JOIN categories c ON c.id = p.category_id
+         JOIN users s ON s.id = p.seller_id
+         ${whereClause}
+         ORDER BY ${orderBy}
+         LIMIT $${i++} OFFSET $${i++}`,
+        [...vals, pageSize, offset]
+      ),
+      pool.query(
+        `SELECT COUNT(*) FROM products p
+         JOIN categories c ON c.id = p.category_id
+         ${whereClause}`,
+        vals
+      ),
     ]);
+
+    const total = parseInt(countResult.rows[0].count);
 
     return NextResponse.json({
       success: true,
       data: {
-        items,
+        items: itemsResult.rows,
         total,
         page,
         pageSize,
@@ -105,46 +103,47 @@ export async function GET(request) {
 
 ### File 2 — `src/app/api/products/[id]/route.ts`
 
-> This is just a suggestion so you know where to start, how to implement, feel free to adapt and change as you go
-
-```	s
+```ts
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { pool } from '@/lib/db';
 
-export async function GET(
-  request,
-  { params }
-) {
+export async function GET(request, { params }) {
   try {
     const { id } = await params;
-    const product = await prisma.product.findUnique({
-      where: { id: parseInt(id) },
-      include: {
-        images: { orderBy: { displayOrder: 'asc' } },
-        seller: {
-          select: {
-            id: true,
-            name: true,
-            avatarUrl: true,
-            bio: true,
-            location: true,
-          },
-        },
-        category: true,
-        reviews: {
-          include: {
-            user: { select: { id: true, name: true, avatarUrl: true } },
-          },
-          orderBy: { createdAt: 'desc' },
-        },
-      },
-    });
 
-    if (!product) {
+    const { rows: products } = await pool.query(
+      `SELECT p.*, c.name as category_name, c.slug as category_slug,
+              s.id as seller_id, s.name as seller_name, s.avatar_url as seller_avatar,
+              s.bio as seller_bio, s.location as seller_location
+       FROM products p
+       JOIN categories c ON c.id = p.category_id
+       JOIN users s ON s.id = p.seller_id
+       WHERE p.id = $1`,
+      [parseInt(id)]
+    );
+
+    if (products.length === 0) {
       return NextResponse.json({ success: false, error: 'Product not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, data: product });
+    const { rows: images } = await pool.query(
+      'SELECT * FROM product_images WHERE product_id = $1 ORDER BY display_order ASC',
+      [parseInt(id)]
+    );
+
+    const { rows: reviews } = await pool.query(
+      `SELECT r.*, u.id as user_id, u.name as user_name, u.avatar_url as user_avatar
+       FROM reviews r
+       JOIN users u ON u.id = r.user_id
+       WHERE r.product_id = $1
+       ORDER BY r.created_at DESC`,
+      [parseInt(id)]
+    );
+
+    return NextResponse.json({
+      success: true,
+      data: { ...products[0], images, reviews },
+    });
   } catch (error) {
     console.error('Product GET error:', error);
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
@@ -156,19 +155,20 @@ export async function GET(
 
 ### File 3 — `src/app/api/categories/route.ts`
 
-> This is just a suggestion so you know where to start, how to implement, feel free to adapt and change as you go
-
-```	s
+```ts
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { pool } from '@/lib/db';
 
 export async function GET() {
   try {
-    const categories = await prisma.category.findMany({
-      include: { _count: { select: { products: { where: { status: 'active' } } } } },
-      orderBy: { name: 'asc' },
-    });
-    return NextResponse.json({ success: true, data: categories });
+    const { rows } = await pool.query(
+      `SELECT c.*,
+              (SELECT COUNT(*) FROM products WHERE category_id = c.id AND status = 'active') as product_count
+       FROM categories c
+       ORDER BY c.name ASC`
+    );
+
+    return NextResponse.json({ success: true, data: rows });
   } catch (error) {
     console.error('Categories GET error:', error);
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
@@ -180,57 +180,49 @@ export async function GET() {
 
 ### File 4 — `src/app/api/sellers/[id]/route.ts`
 
-> This is just a suggestion so you know where to start, how to implement, feel free to adapt and change as you go
-
-```	s
+```ts
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { pool } from '@/lib/db';
 
-export async function GET(
-  request,
-  { params }
-) {
+export async function GET(request, { params }) {
   try {
     const { id } = await params;
-    const seller = await prisma.user.findUnique({
-      where: { id: parseInt(id), role: 'seller' },
-      select: {
-        id: true,
-        name: true,
-        avatarUrl: true,
-        bio: true,
-        location: true,
-        socialLinks: true,
-        createdAt: true,
-        products: {
-          where: { status: 'active' },
-          include: {
-            images: { where: { isPrimary: true }, take: 1 },
-            category: { select: { name: true, slug: true } },
-          },
-          orderBy: { createdAt: 'desc' },
-        },
-      },
-    });
 
-    if (!seller) {
+    const { rows: sellers } = await pool.query(
+      `SELECT id, name, avatar_url, bio, location, social_links, created_at
+       FROM users WHERE id = $1 AND role = 'seller'`,
+      [parseInt(id)]
+    );
+
+    if (sellers.length === 0) {
       return NextResponse.json({ success: false, error: 'Seller not found' }, { status: 404 });
     }
 
-    // Calculate stats
-    const stats = await prisma.product.aggregate({
-      where: { sellerId: parseInt(id), status: 'active' },
-      _avg: { avgRating: true },
-      _count: true,
-    });
+    const { rows: products } = await pool.query(
+      `SELECT p.*,
+              (SELECT url FROM product_images WHERE product_id = p.id AND is_primary = true LIMIT 1) as image_url,
+              c.name as category_name, c.slug as category_slug
+       FROM products p
+       JOIN categories c ON c.id = p.category_id
+       WHERE p.seller_id = $1 AND p.status = 'active'
+       ORDER BY p.created_at DESC`,
+      [parseInt(id)]
+    );
+
+    const { rows: stats } = await pool.query(
+      `SELECT AVG(avg_rating) as avg_rating, COUNT(*) as total_products
+       FROM products WHERE seller_id = $1 AND status = 'active'`,
+      [parseInt(id)]
+    );
 
     return NextResponse.json({
       success: true,
       data: {
-        ...seller,
+        ...sellers[0],
+        products,
         stats: {
-          totalProducts: stats._count,
-          avgRating: stats._avg.avgRating || 0,
+          totalProducts: parseInt(stats[0].total_products),
+          avgRating: parseFloat(stats[0].avg_rating) || 0,
         },
       },
     });

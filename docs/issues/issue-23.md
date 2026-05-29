@@ -2,6 +2,7 @@
 
 **Suggested Branch:** `[YOUR-INITIALS]-issue-23-dashboard-layout-overview`
 
+> ⚠️ **Updated:** All database queries now use raw SQL via the `pg` driver. Prisma has been removed from the project. Schema is at `src/db/schema.sql`.
 
 **Labels:** `feature`, `frontend` | **Priority:** 🟡 High | **Depends on:** Issues 06, 07, 14
 
@@ -16,7 +17,7 @@
 
 > This is just a suggestion so you know where to start, how to implement, feel free to adapt and change as you go
 
-```	sx
+```tsx
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -81,8 +82,8 @@ export default function DashboardLayout({ children }) {
 
 > This is just a suggestion so you know where to start, how to implement, feel free to adapt and change as you go
 
-```	sx
-import prisma from '@/lib/prisma';
+```tsx
+import { pool } from '@/lib/db';
 import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
 import { Package, ShoppingCart, Star, DollarSign, Plus } from 'lucide-react';
@@ -98,15 +99,26 @@ export default async function DashboardPage() {
   const session = await auth();
   if (!session?.user || session.user.role !== 'seller') redirect('/');
 
-  const [productCount, orderItems, reviewStats] = await Promise.all([
-    prisma.product.count({ where: { sellerId: session.user.id } }),
-    prisma.orderItem.findMany({ where: { product: { sellerId: session.user.id } }, select: { quantity: true, unitPrice: true } }),
-    prisma.product.aggregate({ where: { sellerId: session.user.id }, _avg: { avgRating: true } }),
+  const [productCountRes, orderItemsRes, ratingRes] = await Promise.all([
+    pool.query('SELECT COUNT(*) FROM products WHERE seller_id = $1', [session.user.id]),
+    pool.query(
+      `SELECT oi.quantity, oi.unit_price
+       FROM order_items oi
+       JOIN products p ON p.id = oi.product_id
+       WHERE p.seller_id = $1`,
+      [session.user.id]
+    ),
+    pool.query(
+      'SELECT AVG(avg_rating) as avg_rating FROM products WHERE seller_id = $1',
+      [session.user.id]
+    ),
   ]);
 
+  const productCount = parseInt(productCountRes.rows[0].count);
+  const orderItems = orderItemsRes.rows;
   const totalOrders = orderItems.length;
-  const totalRevenue = orderItems.reduce((sum, item) => sum + Number(item.unitPrice) * item.quantity, 0);
-  const avgRating = reviewStats._avg.avgRating || 0;
+  const totalRevenue = orderItems.reduce((sum, item) => sum + Number(item.unit_price) * item.quantity, 0);
+  const avgRating = parseFloat(ratingRes.rows[0].avg_rating) || 0;
 
   const stats = [
     { icon: Package, label: 'Products', value: productCount, color: 'bg-accent/10 text-accent' },

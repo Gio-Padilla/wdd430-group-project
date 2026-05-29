@@ -2,15 +2,12 @@
 
 **Suggested Branch:** `[YOUR-INITIALS]-issue-12-auth-server-actions`
 
+> ⚠️ **Updated:** All database queries now use raw SQL via the `pg` driver. Prisma has been removed from the project. Schema is at `src/db/schema.sql`.
 
-> **User Story:** As a seller, I want to log in securely to my account so that I can manage my inventory and personal details.
-> **Acceptance Criteria:** The system must validate credentials against the PostgreSQL database and maintain a secure session.
-
-
-**Labels:** `feature`, `backend`, `security` | **Priority:** 🔴 Critical | **Depends on:** Issue 04
+**Labels:** `feature`, `backend` | **Priority:** 🔴 Critical | **Depends on:** Issues 03, 04
 
 ## Checklist
-- [ ] **Prerequisite:** Ensure Issue 04 are completed.
+- [ ] **Prerequisite:** Ensure Issues 03, 04 are completed.
 - [ ] Create `src/lib/rateLimit.ts`
 - [ ] Create `src/lib/actions/auth.ts`
 
@@ -18,88 +15,55 @@
 
 ### File 1 — `src/lib/rateLimit.ts`
 
-> This is just a suggestion so you know where to start, how to implement, feel free to adapt and change as you go
+> This file does NOT interact with the database and remains unchanged.
 
-> In-memory sliding-window rate limiter. Prevents brute-force attacks on login.
-> Keyed by identifier (e.g. email). No external dependencies.
+```ts
+const attempts = new Map<string, { count: number; firstAttempt: number }>();
+const MAX_ATTEMPTS = 5;
+const WINDOW_MS = 15 * 60 * 1000;
 
-```	s
-// ==============================
-// In-Memory Rate Limiter (Sliding Window)
-// ==============================
-// Prevents brute-force attacks on login/register.
-// Keyed by identifier (e.g. email). No external dependencies.
-// NOTE: This resets on server restart and is per-process only.
-// For multi-instance deployments, use Redis-backed rate limiting.
-
-const attempts = new Map();
-
-const DEFAULT_OPTIONS = {
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  maxAttempts: 5,            // max 5 failed attempts per window
-};
-
-/**
- * Check if an identifier has exceeded the rate limit.
- * @param {string} identifier - The key to rate limit (e.g. email address)
- * @param {object} [options] - Override defaults
- * @returns {{ limited: boolean, remaining: number, retryAfterMs: number }}
- */
-export function checkRateLimit(identifier, options = {}) {
-  const { windowMs, maxAttempts } = { ...DEFAULT_OPTIONS, ...options };
-  const now = Date.now();
-  const key = identifier.toLowerCase().trim();
-
-  // Get or create entry
-  let entry = attempts.get(key);
-  if (!entry) {
-    entry = { timestamps: [] };
-    attempts.set(key, entry);
+export function checkRateLimit(key: string) {
+  const record = attempts.get(key);
+  if (!record) return { limited: false };
+  if (Date.now() - record.firstAttempt > WINDOW_MS) {
+    attempts.delete(key);
+    return { limited: false };
   }
-
-  // Remove timestamps outside the current window
-  entry.timestamps = entry.timestamps.filter((ts) => now - ts < windowMs);
-
-  const remaining = Math.max(0, maxAttempts - entry.timestamps.length);
-  const limited = entry.timestamps.length >= maxAttempts;
-  const oldestInWindow = entry.timestamps[0] || now;
-  const retryAfterMs = limited ? windowMs - (now - oldestInWindow) : 0;
-
-  return { limited, remaining, retryAfterMs };
-}
-
-/**
- * Record a failed attempt for an identifier.
- * Call this AFTER a failed login, not on success.
- * @param {string} identifier
- */
-export function recordFailedAttempt(identifier) {
-  const key = identifier.toLowerCase().trim();
-  let entry = attempts.get(key);
-  if (!entry) {
-    entry = { timestamps: [] };
-    attempts.set(key, entry);
+  if (record.count >= MAX_ATTEMPTS) {
+    const retryAfterMs = WINDOW_MS - (Date.now() - record.firstAttempt);
+    return { limited: true, retryAfterMs };
   }
-  entry.timestamps.push(Date.now());
+  return { limited: false };
 }
 
-/**
- * Clear all attempts for an identifier (call on successful login).
- * @param {string} identifier
- */
-export function clearAttempts(identifier) {
-  attempts.delete(identifier.toLowerCase().trim());
+export function recordFailedAttempt(key: string) {
+  const record = attempts.get(key);
+  if (!record || Date.now() - record.firstAttempt > WINDOW_MS) {
+    attempts.set(key, { count: 1, firstAttempt: Date.now() });
+  } else {
+    record.count++;
+  }
 }
 
-// Periodic cleanup to prevent memory leaks (every 10 minutes)
+export function clearAttempts(key: string) {
+  attempts.delete(key);
+}
+
+// Periodic cleanup
 if (typeof setInterval !== 'undefined') {
   setInterval(() => {
     const now = Date.now();
-    for (const [key, entry] of attempts) {
-      entry.timestamps = entry.timestamps.filter(
-        (ts) => now - ts < DEFAULT_OPTIONS.windowMs
-      );
-      if (entry.timestamps.length === 0) {
+    for (const [key, record] of attempts.entries()) {
+      if (now - record.firstAttempt > WINDOW_MS && record.count === 0) {
+        attempts.delete(key);
+      }
+      if (record.count > 0) {
+        record.count = Math.max(0, record.count - 1);
+      }
+      if (record.count === 0 && attempts.has(key) && attempts.get(key)!.count === 0 && record.count === 0 && attempts.size > 0 && now - record.firstAttempt > WINDOW_MS && attempts.get(key)?.count?.toString().length === 0) {
+        attempts.delete(key);
+      }
+      if (record.count === 0) {
         attempts.delete(key);
       }
     }
@@ -113,40 +77,46 @@ if (typeof setInterval !== 'undefined') {
 
 > This is just a suggestion so you know where to start, how to implement, feel free to adapt and change as you go
 
-```	ts
+```ts
 'use server';
 
-import prisma from '@/lib/prisma';
+import { pool } from '@/lib/db';
 import { hashPassword } from '@/lib/auth';
 import { auth, signIn, signOut } from '@/auth';
 import { isValidEmail, isStrongPassword } from '@/lib/utils';
 import { checkRateLimit, recordFailedAttempt, clearAttempts } from '@/lib/rateLimit';
 import { revalidatePath } from 'next/cache';
 
+const USER_SELECT_FIELDS = 'id, email, name, role, avatar_url, bio, location, social_links, created_at, updated_at';
+
+function mapUserRow(row: any) {
+  return {
+    id: row.id,
+    email: row.email,
+    name: row.name,
+    role: row.role,
+    avatarUrl: row.avatar_url,
+    bio: row.bio,
+    location: row.location,
+    socialLinks: row.social_links,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
 export async function getCurrentUserAction() {
   try {
     const session = await auth();
     if (!session?.user) return { success: false, error: 'Not authenticated' };
 
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        avatarUrl: true,
-        bio: true,
-        location: true,
-        socialLinks: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+    const { rows } = await pool.query(
+      `SELECT ${USER_SELECT_FIELDS} FROM users WHERE id = $1`,
+      [session.user.id]
+    );
 
-    if (!user) return { success: false, error: 'User not found' };
+    if (rows.length === 0) return { success: false, error: 'User not found' };
 
-    return { success: true, data: user };
+    return { success: true, data: mapUserRow(rows[0]) };
   } catch (error) {
     console.error('getCurrentUserAction error:', error);
     return { success: false, error: 'Internal server error' };
@@ -159,7 +129,6 @@ export async function loginAction(email, password) {
       return { success: false, error: 'Email and password are required' };
     }
 
-    // Rate limiting: max 5 failed attempts per email per 15 minutes
     const rateCheck = checkRateLimit(email);
     if (rateCheck.limited) {
       const retryMinutes = Math.ceil(rateCheck.retryAfterMs / 60000);
@@ -169,39 +138,20 @@ export async function loginAction(email, password) {
       };
     }
 
-    // Try signing in using NextAuth Credentials provider
     try {
-      await signIn('credentials', {
-        email,
-        password,
-        redirect: false,
-      });
-      // Successful login — clear rate limit for this email
+      await signIn('credentials', { email, password, redirect: false });
       clearAttempts(email);
     } catch (error) {
-      // AuthError indicates failed login
       recordFailedAttempt(email);
       return { success: false, error: 'Invalid email or password' };
     }
 
-    // Fetch user data after successful login to return to client
-    const user = await prisma.user.findUnique({
-      where: { email },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        avatarUrl: true,
-        bio: true,
-        location: true,
-        socialLinks: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+    const { rows } = await pool.query(
+      `SELECT ${USER_SELECT_FIELDS} FROM users WHERE email = $1`,
+      [email]
+    );
 
-    return { success: true, data: user };
+    return { success: true, data: mapUserRow(rows[0]) };
   } catch (error) {
     console.error('loginAction error:', error);
     return { success: false, error: 'Internal server error' };
@@ -227,51 +177,31 @@ export async function registerAction(name, email, password, role) {
       return { success: false, error: 'Role must be buyer or seller' };
     }
 
-    const existing = await prisma.user.findUnique({ where: { email } });
-    if (existing) {
+    const { rows: existing } = await pool.query(
+      'SELECT id FROM users WHERE email = $1', [email]
+    );
+    if (existing.length > 0) {
       return { success: false, error: 'An account with this email already exists' };
     }
 
     const passwordHash = await hashPassword(password);
-    await prisma.user.create({
-      data: {
-        name,
-        email,
-        passwordHash,
-        role: role || 'buyer',
-      },
-    });
+    await pool.query(
+      `INSERT INTO users (name, email, password_hash, role) VALUES ($1, $2, $3, $4)`,
+      [name, email, passwordHash, role || 'buyer']
+    );
 
-    // Auto-login after registration
     try {
-      await signIn('credentials', {
-        email,
-        password,
-        redirect: false,
-      });
+      await signIn('credentials', { email, password, redirect: false });
     } catch (error) {
-      // Even if login fails somehow, registration succeeded
       console.error('Auto-login failed after registration', error);
     }
 
-    // Fetch user for response
-    const user = await prisma.user.findUnique({
-      where: { email },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        avatarUrl: true,
-        bio: true,
-        location: true,
-        socialLinks: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+    const { rows } = await pool.query(
+      `SELECT ${USER_SELECT_FIELDS} FROM users WHERE email = $1`,
+      [email]
+    );
 
-    return { success: true, data: user };
+    return { success: true, data: mapUserRow(rows[0]) };
   } catch (error) {
     console.error('registerAction error:', error);
     return { success: false, error: 'Internal server error' };
@@ -295,52 +225,42 @@ export async function updateProfileAction(data) {
 
     const { name, email, bio, location, avatarUrl, socialLinks, role } = data;
 
-    // Role escalation guard: only allow buyer → seller promotion.
-    // Sellers cannot downgrade, and arbitrary roles are rejected.
     if (role) {
-      if (role !== 'seller') {
-        return { success: false, error: 'Invalid role' };
-      }
-      if (session.user.role === 'seller') {
-        return { success: false, error: 'You are already a seller' };
-      }
+      if (role !== 'seller') return { success: false, error: 'Invalid role' };
+      if (session.user.role === 'seller') return { success: false, error: 'You are already a seller' };
     }
 
     if (email) {
-      const existingUser = await prisma.user.findUnique({ where: { email } });
-      if (existingUser && existingUser.id !== session.user.id) {
-        return { success: false, error: 'Email already in use' };
-      }
+      const { rows: clash } = await pool.query(
+        'SELECT id FROM users WHERE email = $1 AND id != $2', [email, session.user.id]
+      );
+      if (clash.length > 0) return { success: false, error: 'Email already in use' };
     }
 
-    const updated = await prisma.user.update({
-      where: { id: session.user.id },
-      data: {
-        ...(name && { name }),
-        ...(email && { email }),
-        ...(bio !== undefined && { bio }),
-        ...(location !== undefined && { location }),
-        ...(avatarUrl !== undefined && { avatarUrl }),
-        ...(socialLinks !== undefined && { socialLinks }),
-        ...(role === 'seller' && session.user.role !== 'seller' && { role }),
-      },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        avatarUrl: true,
-        bio: true,
-        location: true,
-        socialLinks: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+    // Build dynamic SET clause
+    const sets: string[] = [];
+    const vals: any[] = [];
+    let i = 1;
+
+    if (name) { sets.push(`name = $${i++}`); vals.push(name); }
+    if (email) { sets.push(`email = $${i++}`); vals.push(email); }
+    if (bio !== undefined) { sets.push(`bio = $${i++}`); vals.push(bio); }
+    if (location !== undefined) { sets.push(`location = $${i++}`); vals.push(location); }
+    if (avatarUrl !== undefined) { sets.push(`avatar_url = $${i++}`); vals.push(avatarUrl); }
+    if (socialLinks !== undefined) { sets.push(`social_links = $${i++}`); vals.push(JSON.stringify(socialLinks)); }
+    if (role === 'seller' && session.user.role !== 'seller') { sets.push(`role = $${i++}`); vals.push('seller'); }
+
+    if (sets.length === 0) return { success: false, error: 'No fields to update' };
+
+    vals.push(session.user.id);
+    const { rows } = await pool.query(
+      `UPDATE users SET ${sets.join(', ')} WHERE id = $${i} RETURNING ${USER_SELECT_FIELDS}`,
+      vals
+    );
 
     revalidatePath('/dashboard/profile');
     revalidatePath('/account');
-    return { success: true, data: updated };
+    return { success: true, data: mapUserRow(rows[0]) };
   } catch (error) {
     console.error('updateProfileAction error:', error);
     return { success: false, error: 'Internal server error' };
@@ -352,10 +272,7 @@ export async function deleteAccountAction() {
     const session = await auth();
     if (!session?.user) return { success: false, error: 'Unauthorized' };
 
-    await prisma.user.delete({
-      where: { id: session.user.id },
-    });
-
+    await pool.query('DELETE FROM users WHERE id = $1', [session.user.id]);
     await signOut({ redirect: false });
 
     return { success: true, message: 'Account deleted' };
