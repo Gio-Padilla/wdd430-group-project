@@ -58,23 +58,23 @@ export default async function DashboardProductsPage() {
       ) : (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead className="bg-gray-50/80 text-gray-600 border-b border-gray-100 backdrop-blur-md sticky top-0 z-10">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-gray-50/80 text-gray-600 border-b border-gray-100 backdrop-blur-md sticky top-0 z-10 whitespace-nowrap">
                 <tr>
-                  <th className="px-6 py-4 font-semibold">Item</th>
-                  <th className="hidden sm:table-cell px-6 py-4 font-semibold">Category</th>
-                  <th className="px-6 py-4 font-semibold">Price</th>
-                  <th className="hidden md:table-cell px-6 py-4 font-semibold">Stock</th>
-                  <th className="hidden sm:table-cell px-6 py-4 font-semibold">Status</th>
-                  <th className="px-6 py-4 font-semibold text-right">Actions</th>
+                  <th className="px-3 sm:px-6 py-4 font-semibold">Item</th>
+                  <th className="hidden sm:table-cell px-3 sm:px-6 py-4 font-semibold">Category</th>
+                  <th className="px-3 sm:px-6 py-4 font-semibold">Price</th>
+                  <th className="hidden md:table-cell px-3 sm:px-6 py-4 font-semibold">Stock</th>
+                  <th className="hidden sm:table-cell px-3 sm:px-6 py-4 font-semibold">Status</th>
+                  <th className="px-3 sm:px-6 py-4 font-semibold text-right"><span className="hidden sm:inline">Actions</span></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {products.map((product) => (
                   <tr key={product.id} className="hover:bg-gray-50/80 transition-colors group">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-4">
-                        <div className="relative w-14 h-14 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 flex-shrink-0 shadow-sm group-hover:shadow-md transition-shadow">
+                    <td className="px-3 sm:px-6 py-4">
+                      <div className="flex items-center gap-3 sm:gap-4">
+                        <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 flex-shrink-0 shadow-sm group-hover:shadow-md transition-shadow">
                           {product.image ? (
                              <img src={product.image} alt={product.title} className="object-cover w-full h-full transform group-hover:scale-105 transition-transform duration-500" />
                           ) : (
@@ -83,20 +83,20 @@ export default async function DashboardProductsPage() {
                             </div>
                           )}
                         </div>
-                        <div>
-                          <div className="font-semibold text-gray-900 text-base max-w-[150px] sm:max-w-xs truncate">{product.title}</div>
-                          <div className="text-xs text-gray-400 font-medium">SKU: {String(product.id).padStart(6, '0')}</div>
+                        <div className="min-w-0">
+                          <div className="font-semibold text-gray-900 text-sm sm:text-base line-clamp-2">{product.title}</div>
+                          <div className="text-xs text-gray-400 font-medium mt-0.5">SKU: {String(product.id).padStart(6, '0')}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="hidden sm:table-cell px-6 py-4 text-gray-600 font-medium">{product.category_name}</td>
-                    <td className="px-6 py-4 font-semibold text-gray-900">${Number(product.price).toFixed(2)}</td>
-                    <td className="hidden md:table-cell px-6 py-4 text-gray-600">
+                    <td className="hidden sm:table-cell px-3 sm:px-6 py-4 text-gray-600 font-medium whitespace-nowrap">{product.category_name}</td>
+                    <td className="px-3 sm:px-6 py-4 font-semibold text-gray-900 whitespace-nowrap">${Number(product.price).toFixed(2)}</td>
+                    <td className="hidden md:table-cell px-3 sm:px-6 py-4 text-gray-600 whitespace-nowrap">
                         <span className={`inline-flex items-center justify-center px-2 py-1 rounded-md text-xs font-bold ${product.inventory_qty > 0 ? 'bg-gray-100 text-gray-700' : 'bg-red-50 text-red-700'}`}>
                             {product.inventory_qty} in stock
                         </span>
                     </td>
-                    <td className="hidden sm:table-cell px-6 py-4">
+                    <td className="hidden sm:table-cell px-3 sm:px-6 py-4 whitespace-nowrap">
                       <Badge variant={
                         product.status === 'active' ? 'success' : 
                         product.status === 'draft' ? 'default' : 'error'
@@ -104,11 +104,11 @@ export default async function DashboardProductsPage() {
                         {product.status.charAt(0).toUpperCase() + product.status.slice(1)}
                       </Badge>
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                    <td className="px-3 sm:px-6 py-4 text-right whitespace-nowrap">
+                      <div className="flex items-center justify-end gap-1 sm:gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                         <Link 
                           href={`/dashboard/products/${product.id}/edit`}
-                          className="inline-flex items-center gap-1 text-gray-600 hover:text-gray-900 transition-colors bg-white border border-gray-200 hover:bg-gray-50 px-3 py-1.5 rounded-md shadow-sm"
+                          className="inline-flex items-center gap-1 text-gray-600 hover:text-gray-900 transition-colors bg-white border border-gray-200 hover:bg-gray-50 px-2 sm:px-3 py-1.5 rounded-md shadow-sm"
                         >
                           <Edit size={14} /> <span className="hidden sm:inline">Edit</span>
                         </Link>
