@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X, User, LogOut, LayoutDashboard, Home, ShoppingBag, Info, Phone, ShoppingCart } from "lucide-react";
-import { logoutAction } from "@/actions/auth";
+import { logoutAction } from "@/lib/actions/auth";
 
 interface NavLink {
   name: string;

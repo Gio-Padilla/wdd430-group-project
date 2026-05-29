@@ -1,6 +1,6 @@
 'use client'
 import { useState } from "react";
-import { loginAction } from "@/actions/auth";
+import { loginAction } from "@/lib/actions/auth";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 
 // Finish the sign in card with the logo and title, then we can add the form elements in the next step
@@ -83,4 +83,4 @@ export default function SignInCard() {
             </div>
         </div>
     )
-}
+}

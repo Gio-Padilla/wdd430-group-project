@@ -29,7 +29,7 @@ export async function registerAction(data: any) {
 
         // create user
         await db.query(
-            `INSERT INTO users (email, name, passwordhash, role)
+            `INSERT INTO users (email, name, password_hash, role)
              VALUES ($1, $2, $3, $4)`,
             [
                 email,

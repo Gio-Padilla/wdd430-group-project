@@ -19,19 +19,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
                 // 🔹 Raw PostgreSQL query (no Prisma)
                 const result = await db.query(
-                    "SELECT id, email, name, role, passwordhash FROM users WHERE email = $1",
+                    "SELECT id, email, name, role, password_hash FROM users WHERE email = $1",
                     [credentials.email]
                 );
 
                 const user = result.rows[0];
 
-                if (!user || !user.passwordhash) {
+                if (!user || !user.password_hash) {
                     return null;
                 }
 
                 const passwordsMatch = await bcrypt.compare(
                     credentials.password as string,
-                    user.passwordhash
+                    user.password_hash
                 );
 
                 if (!passwordsMatch) {
