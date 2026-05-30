@@ -51,7 +51,6 @@ export default function RootLayout({
         ${aladin.variable}
         ${quicksand.variable}
         ${roboto.variable}
-        h-full
         antialiased
       `}
     >
