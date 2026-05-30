@@ -74,7 +74,7 @@ export async function updateProductAction(id: any, data: any) {
     const { rows: existing } = await pool.query(
       'SELECT id, seller_id, slug FROM products WHERE id = $1', [productId]
     );
-    if (existing.length === 0 || existing[0].seller_id !== session.user.id) {
+    if (existing.length === 0 || String(existing[0].seller_id) !== String(session.user.id)) {
       return { success: false, error: 'Not found or unauthorized' };
     }
 
@@ -142,7 +142,7 @@ export async function deleteProductAction(id: any) {
     const { rows } = await pool.query(
       'SELECT id, seller_id FROM products WHERE id = $1', [productId]
     );
-    if (rows.length === 0 || rows[0].seller_id !== session.user.id) {
+    if (rows.length === 0 || String(rows[0].seller_id) !== String(session.user.id)) {
       return { success: false, error: 'Not found or unauthorized' };
     }
 
