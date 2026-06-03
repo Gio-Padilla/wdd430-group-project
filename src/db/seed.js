@@ -13,7 +13,7 @@ const categories = [
     name: 'Ceramics',
     slug: 'ceramics',
     description: 'Handmade pottery, mugs, bowls, and decorative ceramic pieces',
-    imageUrl: 'https://loremflickr.com/800/800/ceramics,pottery/all',
+    imageUrl: 'https://loremflickr.com/cache/resized/65535_54472909262_ec8ac75e95_b_800_800_nofilter.jpg',
   },
   {
     name: 'Jewelry',
