@@ -1,7 +1,8 @@
 import Image from "next/image"
 import { products } from "@/data/products"
 import ReviewSection from "@/components/StarRating"
-
+import Button from "@/components/ui/Button"
+import Breadcrumb from "@/components/ui/Breadcrumb"
 
 type Props = {
     params: Promise<{
@@ -21,7 +22,7 @@ export default async function ProductDetailPage({
 
     if (!product) {
         return (
-            <h1 className="p-6 text-2xl">
+            <h1 className="p-6 text-2xl text-[#2F4F4F]">
                 Product not found
             </h1>
         )
@@ -30,9 +31,12 @@ export default async function ProductDetailPage({
     return (
         <main className="p-6 max-w-4xl mx-auto">
 
-            <div className="grid md:grid-cols-2 gap-10">
+            <Breadcrumb productName={product.title} />
 
-                <div className="relative w-full h-96 bg-gray-100 rounded-2xl overflow-hidden">
+            <div className="grid md:grid-cols-2 gap-10 bg-[#DCDCDC] border border-black rounded-3xl p-8 shadow-md">
+
+                <div className="relative w-full h-96 bg-white rounded-2xl overflow-hidden">
+
                     <Image
                         src={product.image}
                         alt={product.title}
@@ -40,29 +44,38 @@ export default async function ProductDetailPage({
                         sizes="(max-width: 768px) 100vw, 50vw"
                         className="object-contain"
                     />
+
                 </div>
 
                 <div>
-                    <h1 className="text-4xl font-bold mb-4">
+
+                    <h1 className="text-4xl font-bold mb-4 text-[#2F4F4F]">
                         {product.title}
                     </h1>
 
-                    <p className="text-gray-500 font-medium mb-4">
-                        by {product.seller}
+                    <p className="text-[#2176FF] font-medium mb-4">
+                        Artisan: {product.seller}
                     </p>
 
-                    <p className="text-gray-600 mb-6">
+                    <p className="text-[#2F4F4F] mb-6">
                         {product.description}
                     </p>
 
-                    <p className="text-2xl font-semibold">
+                    <p className="text-3xl font-bold text-[#000000] mb-8">
                         ${product.price}
                     </p>
+
+                    <Button>
+                        Add to Cart
+                    </Button>
+
                 </div>
 
             </div>
 
-            <ReviewSection />
+            <div className="mt-10">
+                <ReviewSection />
+            </div>
 
         </main>
     )

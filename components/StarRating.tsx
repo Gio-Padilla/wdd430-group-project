@@ -67,7 +67,20 @@ export default function ReviewSection() {
 
                 <button
                     onClick={handleSubmit}
-                    className="bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition"
+                    className="
+              rounded-lg
+              border-2
+              border-black
+              bg-[#2F4F4F]
+              px-4
+              py-2
+              text-sm
+              font-bold
+              text-white
+              transition
+              hover:bg-[#F26419]
+              hover:shadow-md
+            "
                 >
                     Submit Review
                 </button>

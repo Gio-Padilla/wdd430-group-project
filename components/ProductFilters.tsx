@@ -26,13 +26,13 @@ export default function ProductFilters({
 
     return (
 
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5 mb-10 flex flex-col lg:flex-row gap-4 lg:items-center">
+        <div className="bg-[#DCDCDC] border-2 border-[#000000] rounded-2xl shadow-[0_8px_20px_rgba(0,0,0,0.12)] p-5 mb-10 flex flex-col lg:flex-row gap-4 lg:items-center">
 
-            <div className="flex items-center flex-1 border rounded-xl px-4 py-3 bg-white">
+            <div className="flex items-center flex-1 border-2 border-[#2F4F4F] rounded-xl px-4 py-3 bg-white">
 
                 <Search
                     size={20}
-                    className="text-gray-400 mr-3"
+                    className="text-[#2176FF] mr-3"
                 />
 
                 <label
@@ -50,12 +50,12 @@ export default function ProductFilters({
                     onChange={(e) =>
                         onSearchChange(e.target.value)
                     }
-                    className="w-full outline-none"
+                    className="w-full outline-none text-[#2F4F4F] placeholder:text-gray-400"
                 />
 
             </div>
 
-            <div className="flex items-center border rounded-xl px-4 py-3 bg-gray-50">
+            <div className="flex items-center border-2 border-[#2F4F4F] rounded-xl px-4 py-3 bg-white">
 
                 <label
                     htmlFor="minPrice"
@@ -64,7 +64,7 @@ export default function ProductFilters({
                     Minimum Price
                 </label>
 
-                <span className="text-gray-500 mr-2">
+                <span className="text-[#000000] font-semibold mr-2">
                     Min $
                 </span>
 
@@ -80,12 +80,12 @@ export default function ProductFilters({
                                 : Number(e.target.value)
                         )
                     }
-                    className="w-20 outline-none bg-transparent"
+                    className="w-20 outline-none bg-transparent text-[#2F4F4F]"
                 />
 
             </div>
 
-            <div className="flex items-center border rounded-xl px-4 py-3 bg-gray-50">
+            <div className="flex items-center border-2 border-[#2F4F4F] rounded-xl px-4 py-3 bg-white">
 
                 <label
                     htmlFor="maxPrice"
@@ -94,7 +94,7 @@ export default function ProductFilters({
                     Maximum Price
                 </label>
 
-                <span className="text-gray-500 mr-2">
+                <span className="text-[#000000] font-semibold mr-2">
                     Max $
                 </span>
 
@@ -110,7 +110,7 @@ export default function ProductFilters({
                                 : Number(e.target.value)
                         )
                     }
-                    className="w-20 outline-none bg-transparent"
+                    className="w-20 outline-none bg-transparent text-[#2F4F4F]"
                 />
 
             </div>

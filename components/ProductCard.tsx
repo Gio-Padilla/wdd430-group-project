@@ -1,5 +1,6 @@
 import Image from "next/image"
 import Link from "next/link"
+import Badge from "@/components/ui/Badge"
 
 type Product = {
     id: number
@@ -20,9 +21,9 @@ export default function ProductCard({
     return (
         <Link href={`/products/${product.id}`}>
 
-            <div className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition duration-300 cursor-pointer h-full flex flex-col">
+            <div className="bg-[#DCDCDC] border border-black rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition duration-300 cursor-pointer h-full flex flex-col">
 
-                <div className="relative w-full h-64 bg-gray-100">
+                <div className="relative w-full h-64 bg-white">
 
                     <Image
                         src={product.image}
@@ -36,24 +37,29 @@ export default function ProductCard({
 
                 <div className="p-5 flex flex-col flex-grow">
 
-
-                    <h2 className="text-xl font-semibold mb-2 text-center">
+                    <h2 className="text-xl font-semibold mb-3 text-center text-[#2F4F4F]">
                         {product.title}
                     </h2>
 
-                    <p className="text-yellow-500 mb-3 text-center">
+                    <div className="flex justify-center mb-3">
+                        <Badge className="bg-[#2F4F4F] text-white">
+                            {product.category}
+                        </Badge>
+                    </div>
+
+                    <p className="text-[#F26419] mb-3 text-center font-medium">
                         ⭐ {product.rating}
                     </p>
 
-                    <p className="text-gray-700 mb-4 text-center flex-grow">
+                    <p className="text-[#2F4F4F] mb-4 text-center flex-grow">
                         {product.description}
                     </p>
 
-                    <p className="text-gray-500 text-sm text-center mb-3">
+                    <p className="text-[#2176FF] text-sm text-center mb-3 font-medium">
                         Artisan: {product.seller}
                     </p>
 
-                    <p className="text-2xl font-bold text-center">
+                    <p className="text-2xl font-bold text-center text-[#000000]">
                         ${product.price}
                     </p>
 
