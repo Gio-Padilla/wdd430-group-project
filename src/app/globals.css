@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+
+/* Since were using tailwind I added some of the utilitiy classes we can just reference it directly*/
+@theme{
+  --color-primary: #2F4F4F;
+  --color-background: #DCDCDC;
+  --color-accent: #F26419;
+  --color-outline: #000000;
+  --color-blue: #2176FF;
+}
+
+/* =========================
+   DESIGN TOKENS
+========================= */
+
+:root {
+  --primary: #2F4F4F;
+  --background: #DCDCDC;
+  --accent: #F26419;
+  --outline: #000000;
+  --blue: #2176FF;
+}
+
+/* =========================
+   BASE LAYOUT
+========================= */
+
+body {
+  background: var(--background);
+  color: var(--outline);
+}
+
+/* =========================
+   TYPOGRAPHY (SAFE VERSION)
+   IMPORTANT: no forced text color here
+========================= */
+
+h1, h2, h3 {
+  font-family: var(--font-title);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0;
+}
+
+p, a, span, li {
+  font-family: var(--font-body);
+}
+
+small {
+  font-family: var(--font-small);
+}
+
+/* =========================
+   FORM ELEMENTS (optional safety)
+========================= */
+
+input, button, textarea {
+  font-family: var(--font-body);
+}
+
+/* =========================
+   IMPORTANT FIX
+   (prevents inheritance bugs)
+========================= */
+
+* {
+  box-sizing: border-box;
+}
+
+/* =========================
+   ANIMATIONS
+========================= */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
