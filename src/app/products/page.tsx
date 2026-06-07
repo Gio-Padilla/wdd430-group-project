@@ -1,30 +1,82 @@
-import ProductCard from "@/components/ui/ProductCard"
-import { db } from "@/lib/db"
-import { products as fallbackProducts } from "@/data/products"
+import FilterBar from "@/components/ui/FilterBar";
+import { db } from "@/lib/db";
+import ProductGrid from "@/components/ui/ProductGrid";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-export default async function ProductsPage() {
-    let displayProducts = fallbackProducts;
+type SearchParams = Promise<{
+    category?: string;
+    minPrice?: string;
+    maxPrice?: string;
+}>;
+
+const categoriesResult = await db.query(`
+    SELECT id, name
+    FROM categories
+    ORDER BY name
+`);
+
+export default async function ProductsPage({
+    searchParams,
+}: {
+    searchParams: SearchParams;
+}) {
+    const { category, minPrice, maxPrice } = await searchParams;
+
+    let query = `
+        SELECT
+            p.id,
+            p.title,
+            p.description,
+            p.price,
+            c.name as category,
+            (
+                SELECT url
+                FROM product_images
+                WHERE product_id = p.id
+                AND is_primary = true
+                LIMIT 1
+            ) as image
+        FROM products p
+        JOIN categories c ON c.id = p.category_id
+        WHERE p.status = 'active'
+    `;
+
+    const values: (string | number)[] = [];
+    let paramCount = 1;
+
+    if (category) {
+        query += ` AND p.category_id = $${paramCount}`;
+        values.push(category);
+        paramCount++;
+    }
+
+    if (minPrice) {
+        query += ` AND p.price >= $${paramCount}`;
+        values.push(Number(minPrice));
+        paramCount++;
+    }
+
+    if (maxPrice) {
+        query += ` AND p.price <= $${paramCount}`;
+        values.push(Number(maxPrice));
+        paramCount++;
+    }
+
+    query += ` ORDER BY p.created_at DESC`;
+
+    let products = [];
 
     try {
-        const { rows } = await db.query(`
-          SELECT p.id, p.title, p.description, p.price, 
-                 (SELECT url FROM product_images WHERE product_id = p.id AND is_primary = true LIMIT 1) as image
-          FROM products p
-          WHERE p.status = 'active'
-          ORDER BY p.created_at DESC
-        `);
-        
-        if (rows.length > 0) {
-            displayProducts = rows.map(product => ({
-                ...product,
-                price: Number(product.price),
-                image: product.image || '/products/placeholder.jpg'
-            }));
-        }
+        const { rows } = await db.query(query, values);
+
+        products = rows.map((product) => ({
+            ...product,
+            price: Number(product.price),
+            image: product.image || "/products/placeholder.jpg",
+        }));
     } catch (error) {
-        console.error("Database connection failed, falling back to mock data:", error);
+        console.error("Failed to fetch products:", error);
     }
 
     return (
@@ -33,14 +85,12 @@ export default async function ProductsPage() {
                 Handmade Products
             </h1>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {displayProducts.map((product) => (
-                    <ProductCard
-                        key={product.id}
-                        product={product}
-                    />
-                ))}
-            </div>
+            <FilterBar
+                categories={categoriesResult.rows}
+            />
+
+            <ProductGrid products={products} />
+
         </main>
-    )
+    );
 }
