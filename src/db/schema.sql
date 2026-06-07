@@ -108,7 +108,7 @@ CREATE TABLE "reviews" (
     "id" SERIAL PRIMARY KEY,
     "product_id" INTEGER NOT NULL,
     "user_id" INTEGER NOT NULL,
-    "rating" INTEGER NOT NULL,
+    "rating" INTEGER NOT NULL CHECK ("rating" BETWEEN 1 AND 5),
     "comment" TEXT NOT NULL,
     "seller_reply" TEXT,
     "seller_reply_at" TIMESTAMP WITH TIME ZONE,
