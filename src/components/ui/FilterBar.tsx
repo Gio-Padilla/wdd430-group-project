@@ -201,6 +201,35 @@ export default function FilterBar({
                 />
             </div>
 
+            {/* Clear Filters Button */}
+            <button
+                onClick={clearFilters}
+                className="
+                    p-3
+                    rounded-lg
+                    border-2
+                    cursor-pointer
+                    text-sm
+                    font-semibold
+                    transition-all
+                    duration-200
+
+                    bg-[#DCDCDC]
+                    border-black
+                    text-[#2F4F4F]
+
+                    hover:bg-[#F26419]
+                    hover:text-white
+                    hover:shadow-md
+                    hover:scale-105
+                "
+                style={{
+                    fontFamily: "Roboto",
+                }}
+            >
+                Clear Filters
+            </button>
+
             {/* Status */}
             <div className="flex items-center h-full">
                 {isPending && (
@@ -222,26 +251,6 @@ export default function FilterBar({
                     </div>
                 )}
             </div>
-            <button
-                onClick={clearFilters}
-                className="
-                    px-4
-                    py-2
-                    rounded-lg
-                    border-2
-                    text-sm
-                    font-semibold
-                    transition
-                "
-                style={{
-                    backgroundColor: "#DCDCDC",
-                    borderColor: "#000000",
-                    color: "#2F4F4F",
-                    fontFamily: "Roboto",
-                }}
-            >
-                Clear Filters
-            </button>
         </div>
     );
 }
