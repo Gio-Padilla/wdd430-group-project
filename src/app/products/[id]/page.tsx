@@ -3,6 +3,7 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
 import { products as fallbackProducts } from "@/data/products";
+import AddToCartButton from "@/components/cart/AddToCartButton";
 
 type Props = {
     params: Promise<{
@@ -134,7 +135,17 @@ export default async function ProductDetailPage({ params }: Props) {
                         ${product.price}
                     </p>
                 </div>
+                <div className="space-y-4">
 
+                    <p className="text-2xl font-semibold">
+                        ${product.price}
+                    </p>
+
+                    <AddToCartButton
+                        productId={Number(product.id)}
+                    />
+
+                </div>
             </div>
 
             {/* Rating Summary */}
