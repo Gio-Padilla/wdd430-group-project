@@ -2,7 +2,7 @@
 DROP TABLE IF EXISTS "reviews" CASCADE;
 DROP TABLE IF EXISTS "order_items" CASCADE;
 DROP TABLE IF EXISTS "orders" CASCADE;
-DROP TABLE IF EXISTS "cart_items" CASCADE;
+DROP TABLE IF EXISTS "favorites" CASCADE;
 DROP TABLE IF EXISTS "product_images" CASCADE;
 DROP TABLE IF EXISTS "products" CASCADE;
 DROP TABLE IF EXISTS "categories" CASCADE;
@@ -65,17 +65,16 @@ CREATE TABLE "product_images" (
     CONSTRAINT "fk_product_images_product" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE CASCADE
 );
 
--- 6. Create Cart Items Table
-CREATE TABLE "cart_items" (
+-- 6. Create Favorites Table
+CREATE TABLE "favorites" (
     "id" SERIAL PRIMARY KEY,
     "user_id" INTEGER NOT NULL,
     "product_id" INTEGER NOT NULL,
-    "quantity" INTEGER NOT NULL DEFAULT 1,
     "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     
-    CONSTRAINT "fk_cart_items_user" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE,
-    CONSTRAINT "fk_cart_items_product" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE CASCADE,
-    CONSTRAINT "uidx_user_product" UNIQUE ("user_id", "product_id")
+    CONSTRAINT "fk_favorites_user" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE,
+    CONSTRAINT "fk_favorites_product" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE CASCADE,
+    CONSTRAINT "uidx_favorites_user_product" UNIQUE ("user_id", "product_id")
 );
 
 -- 7. Create Orders Table
@@ -129,7 +128,7 @@ CREATE INDEX "idx_products_created_at" ON "products"("created_at");
 
 CREATE INDEX "idx_product_images_product_id" ON "product_images"("product_id");
 
-CREATE INDEX "idx_cart_items_user_id" ON "cart_items"("user_id");
+CREATE INDEX "idx_favorites_user_id" ON "favorites"("user_id");
 
 CREATE INDEX "idx_orders_user_id" ON "orders"("user_id");
 CREATE INDEX "idx_orders_status" ON "orders"("status");
