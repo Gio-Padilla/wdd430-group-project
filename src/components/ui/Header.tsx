@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { User, ShoppingCart } from "lucide-react";
+import { User, Heart } from "lucide-react";
 import MobileMenu from "@/components/ui/MobileMenu";
 import UserMenu from "@/components/ui/UserMenu";
 import DesktopNav from "@/components/ui/DesktopNav";
@@ -27,7 +27,7 @@ export default async function Header() {
     { name: "About", href: "/about" },
     { name: "Contact", href: "/contact" },
     { name: "Sellers", href: "/sellers" },
-    { name: "Cart", href: "/cart" },
+    { name: "Favorites", href: "/favorites" },
   ];
 
   return (
@@ -62,10 +62,10 @@ export default async function Header() {
         {/* Desktop Navigation Links */}
         <DesktopNav navLinks={desktopNavLinks} />
 
-        {/* Desktop Right: Cart & Account Button */}
+        {/* Desktop Right: Favorites & Account Button */}
         <div className="hidden md:flex items-center gap-4 justify-end">
-          <Link href="/cart" className="relative p-2 text-[#2F4F4F] hover:text-[#F26419] transition cursor-pointer" aria-label="Shopping Cart">
-            <ShoppingCart className="w-6 h-6" />
+          <Link href="/favorites" className="relative p-2 text-[#2F4F4F] hover:text-red-500 transition cursor-pointer" aria-label="Favorites">
+            <Heart className="w-6 h-6" />
           </Link>
           {session ? (
             <UserMenu user={session.user} />

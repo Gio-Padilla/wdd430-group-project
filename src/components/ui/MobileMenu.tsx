@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, User, LogOut, LayoutDashboard, Home, ShoppingBag, Info, Phone, ShoppingCart } from "lucide-react";
+import { Menu, X, User, LogOut, LayoutDashboard, Home, ShoppingBag, Info, Phone, Heart } from "lucide-react";
 import { logoutAction } from "@/lib/actions/auth";
 
 interface NavLink {
@@ -28,7 +28,8 @@ export default function MobileMenu({ navLinks, user }: { navLinks: NavLink[], us
       case "products": return <ShoppingBag size={18} className={pathname === "/products" ? "text-[#F26419]" : "text-[#2F4F4F]/70"} />;
       case "about": return <Info size={18} className={pathname === "/about" ? "text-[#F26419]" : "text-[#2F4F4F]/70"} />;
       case "contact": return <Phone size={18} className={pathname === "/contact" ? "text-[#F26419]" : "text-[#2F4F4F]/70"} />;
-      case "cart": return <ShoppingCart size={18} className={pathname === "/cart" ? "text-[#F26419]" : "text-[#2F4F4F]/70"} />;
+      case "cart":
+      case "favorites": return <Heart size={18} className={pathname === "/favorites" ? "text-red-500" : "text-[#2F4F4F]/70"} />;
       case "sellers": return <User size={18} className={pathname === "/sellers" ? "text-[#F26419]" : "text-[#2F4F4F]/70"} />;
       default: return null;
     }
