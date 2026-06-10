@@ -1,6 +1,7 @@
 import FilterBar from "@/components/ui/FilterBar";
 import { db } from "@/lib/db";
 import ProductGrid from "@/components/ui/ProductGrid";
+import { auth } from "@/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -23,20 +24,34 @@ export default async function ProductsPage({
 }) {
     const { category, minPrice, maxPrice } = await searchParams;
 
+    const session = await auth();
+    let favoritedProductIds: number[] = [];
+    if (session?.user?.id) {
+        try {
+            const favResult = await db.query(
+                `SELECT product_id FROM favorites WHERE user_id = $1`,
+                [session.user.id]
+            );
+            favoritedProductIds = favResult.rows.map(r => r.product_id);
+        } catch (error) {
+            console.error("Failed to fetch favorites:", error);
+        }
+    }
+
     let query = `
         SELECT
             p.id,
             p.title,
             p.description,
             p.price,
+            p.avg_rating,
+            p.review_count,
             c.name as category,
             (
-                SELECT url
+                SELECT json_agg(url ORDER BY display_order)
                 FROM product_images
                 WHERE product_id = p.id
-                AND is_primary = true
-                LIMIT 1
-            ) as image
+            ) as images
         FROM products p
         JOIN categories c ON c.id = p.category_id
         WHERE p.status = 'active'
@@ -73,7 +88,9 @@ export default async function ProductsPage({
         products = rows.map((product) => ({
             ...product,
             price: Number(product.price),
-            image: product.image || "/products/placeholder.jpg",
+            images: product.images || [],
+            image: product.images?.[0] || "/products/placeholder.jpg",
+            initialFavorited: favoritedProductIds.includes(product.id),
         }));
     } catch (error) {
         console.error("Failed to fetch products:", error);

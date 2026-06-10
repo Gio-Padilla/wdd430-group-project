@@ -123,7 +123,7 @@ export default function Home() {
                 </p>
 
                 <Link
-                  href="/products"
+                  href="/products?category=6"
                   className="font-bold text-[#F26419] hover:underline"
                 >
                   Browse Collection →
@@ -154,7 +154,7 @@ export default function Home() {
                 </p>
 
                 <Link
-                  href="/products"
+                  href="/products?category=1"
                   className="font-bold text-[#F26419] hover:underline"
                 >
                   Browse Collection →
@@ -184,7 +184,7 @@ export default function Home() {
                 </p>
 
                 <Link
-                  href="/products"
+                  href="/products?category=8"
                   className="font-bold text-[#F26419] hover:underline"
                 >
                   Browse Collection →

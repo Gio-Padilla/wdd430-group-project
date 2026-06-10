@@ -43,6 +43,12 @@ export default async function DashboardProductsPage(props: { searchParams: Promi
 
   return (
     <div className="p-2 sm:p-4 md:p-8 max-w-6xl mx-auto w-full">
+      <div className="mb-4">
+        <Link href="/dashboard" className="text-sm font-medium text-gray-500 hover:text-primary transition-colors flex items-center gap-1">
+          &larr; Back to Dashboard
+        </Link>
+      </div>
+
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
         <div>
             <h1 className="text-3xl font-bold font-title text-gray-900 tracking-tight">Products</h1>
