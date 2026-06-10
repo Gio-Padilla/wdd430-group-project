@@ -1,48 +1,130 @@
-import Link from "next/link";
-import Image from "next/image";
-import { db } from '@/lib/db';
+import { db } from "@/lib/db";
+import ArtisanCard from "@/components/sellers/ArtisanCard";
+import Pagination from "@/components/ui/Pagination";
 
-async function getSellers() {
+export const dynamic = "force-dynamic";
+
+async function getSellers(page: number, limit: number) {
     try {
-        // Fetch sellers from the database
-        const result = await db.query('SELECT id, name, bio, location, avatar_url AS "avatarUrl" FROM "users" WHERE role = \'seller\' ORDER BY name ASC' );
-        return result.rows;
+        const offset = (page - 1) * limit;
+        
+        // 1. Get total count
+        const countResult = await db.query(
+            `SELECT COUNT(*) FROM "users" WHERE role = 'seller'`
+        );
+        const totalCount = parseInt(countResult.rows[0].count, 10);
+        
+        // 2. Get paginated sellers
+        const sellersResult = await db.query(
+            `SELECT id, name, bio, location, avatar_url AS "avatarUrl" 
+             FROM "users" 
+             WHERE role = 'seller' 
+             ORDER BY name ASC 
+             LIMIT $1 OFFSET $2`,
+            [limit, offset]
+        );
+        
+        const sellers = sellersResult.rows;
+
+        // 3. Get top 4 products for each seller for the sneak peek
+        if (sellers.length > 0) {
+            const sellerIds = sellers.map(s => s.id);
+            const placeholders = sellerIds.map((_, i) => `$${i + 1}`).join(',');
+            
+            // Query products with their primary image
+            // We use a window function to get up to 4 products per seller
+            const productsResult = await db.query(
+                `WITH RankedProducts AS (
+                    SELECT 
+                        p.id, 
+                        p.title, 
+                        p.seller_id,
+                        (
+                            SELECT url 
+                            FROM product_images 
+                            WHERE product_id = p.id AND is_primary = true 
+                            LIMIT 1
+                        ) as image,
+                        ROW_NUMBER() OVER (PARTITION BY p.seller_id ORDER BY p.created_at DESC) as rn
+                    FROM products p
+                    WHERE p.seller_id IN (${placeholders}) AND p.status = 'active'
+                )
+                SELECT id, title, seller_id, image
+                FROM RankedProducts
+                WHERE rn <= 4`,
+                sellerIds
+            );
+
+            // Group products by seller
+            const productsBySeller = productsResult.rows.reduce((acc, row) => {
+                if (!acc[row.seller_id]) acc[row.seller_id] = [];
+                acc[row.seller_id].push({
+                    id: row.id,
+                    title: row.title,
+                    image: row.image
+                });
+                return acc;
+            }, {} as Record<number, any[]>);
+
+            // Attach products to sellers
+            for (const seller of sellers) {
+                seller.products = productsBySeller[seller.id] || [];
+            }
+        }
+
+        return { sellers, totalCount };
     } catch (error) {
-        console.error('Error fetching sellers:', error);
-        return [];
+        console.error("Error fetching sellers:", error);
+        return { sellers: [], totalCount: 0 };
     }
 }
-export default async function SellersPage() {
-    const sellers = await getSellers();
 
-    if (sellers.length === 0) {
-        return (
-            <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12'>
-                <h1 className='text-3xl font-bold text-gray-900'>Meet Our Artisans</h1>
-                <p className='text-gray-600 mt-4'>No artisans found.</p>
-            </div>
-        );
-    }
+export default async function SellersPage(props: { searchParams: Promise<{ page?: string }> }) {
+    const searchParams = await props.searchParams;
+    const currentPage = Number(searchParams?.page) || 1;
+    const limit = 6;
+    
+    const { sellers, totalCount } = await getSellers(currentPage, limit);
+    const totalPages = Math.ceil(totalCount / limit);
+
     return (
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12'>
-            <h1 className='text-3xl font-bold text-gray-900'>Meet Our Artisans</h1>
-            <div className='mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3'>
-                {sellers.map((seller) => (
-                    <div key={seller.id} className='bg-white rounded-lg shadow-md p-6'>
-                        {seller.avatarUrl && (
-                            <div className='mt-4'>
-                                <Image  src={seller.avatarUrl} alt={`${seller.name}'s avatar`} width={100} height={100} className='rounded-full' />
+        <main className="bg-gray-50 min-h-screen pb-16">
+            {/* Hero Header */}
+            <div className="bg-[#2F4F4F] text-white py-16 px-4 sm:px-6 lg:px-8 mb-12">
+                <div className="max-w-7xl mx-auto text-center">
+                    <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
+                        Meet Our Artisans
+                    </h1>
+                    <p className="text-lg text-gray-300 max-w-2xl mx-auto">
+                        Discover the talented creators behind our unique handcrafted goods. 
+                        Every artisan brings a story and a dedication to their craft.
+                    </p>
+                </div>
+            </div>
+
+            {/* Sellers Grid */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                {sellers.length === 0 ? (
+                    <div className="bg-white rounded-2xl border border-gray-200 p-16 text-center shadow-sm">
+                        <p className="text-xl text-gray-500 font-medium">No artisans found.</p>
+                    </div>
+                ) : (
+                    <>
+                        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                            {sellers.map((seller) => (
+                                <ArtisanCard key={seller.id} artisan={seller} />
+                            ))}
+                        </div>
+                        
+                        {/* Pagination */}
+                        {totalPages > 1 && (
+                            <div className="mt-12 flex justify-center">
+                                <Pagination totalPages={totalPages} />
                             </div>
                         )}
-                        <h2 className='text-xl font-semibold text-gray-800'>{seller.name}</h2>
-                        <p className='text-gray-600 mt-2'>{seller.bio}</p>
-                        <p className='text-gray-500 mt-4'>Location: {seller.location}</p>
-                        <Link href={`/sellers/${seller.id}`} className='hover:underline mt-2 block border border-blue-500 py-2 px-4 rounded bg-blue-500 text-white w-full text-center'>View Products</Link>
-                        
-                    
-                    </div>
-                ))}
+                    </>
+                )}
             </div>
-        </div>
+        </main>
     );
 }
