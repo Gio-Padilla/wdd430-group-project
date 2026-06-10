@@ -6,6 +6,9 @@ type Product = {
     description: string;
     price: number;
     image: string;
+    category?: string;
+    avg_rating?: number;
+    review_count?: number;
 };
 
 type ProductGridProps = {
@@ -17,23 +20,8 @@ export default function ProductGrid({
 }: ProductGridProps) {
     if (products.length === 0) {
         return (
-            <div
-                className="
-                    rounded-xl
-                    border-2
-                    p-8
-                    text-center
-                "
-                style={{
-                    backgroundColor: "#DCDCDC",
-                    borderColor: "#000000",
-                }}
-            >
-                <p
-                    style={{
-                        fontFamily: "Quicksand",
-                    }}
-                >
+            <div className="bg-white rounded-2xl border border-gray-200 p-10 text-center shadow-sm">
+                <p className="text-gray-500">
                     No products found matching your filters.
                 </p>
             </div>
@@ -41,41 +29,12 @@ export default function ProductGrid({
     }
 
     return (
-        <div
-            className="
-                rounded-xl
-                border-2
-                p-6
-                shadow-lg
-            "
-            style={{
-                backgroundColor: "#DCDCDC",
-                borderColor: "#000000",
-            }}
-        >
-            <h2
-                className="
-                    text-2xl
-                    uppercase
-                    mb-6
-                "
-                style={{
-                    fontFamily: "Aladin",
-                    color: "#2F4F4F",
-                }}
-            >
-                Products ({products.length})
-            </h2>
+        <div>
+            <p className="text-sm text-gray-500 mb-5">
+                Showing {products.length} {products.length === 1 ? "product" : "products"}
+            </p>
 
-            <div
-                className="
-                    grid
-                    grid-cols-1
-                    sm:grid-cols-2
-                    lg:grid-cols-3
-                    gap-6
-                "
-            >
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                 {products.map((product) => (
                     <ProductCard
                         key={product.id}
