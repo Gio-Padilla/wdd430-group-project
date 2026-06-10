@@ -29,14 +29,14 @@ export default async function ProductsPage({
             p.title,
             p.description,
             p.price,
+            p.avg_rating,
+            p.review_count,
             c.name as category,
             (
-                SELECT url
+                SELECT json_agg(url ORDER BY display_order)
                 FROM product_images
                 WHERE product_id = p.id
-                AND is_primary = true
-                LIMIT 1
-            ) as image
+            ) as images
         FROM products p
         JOIN categories c ON c.id = p.category_id
         WHERE p.status = 'active'
@@ -73,7 +73,8 @@ export default async function ProductsPage({
         products = rows.map((product) => ({
             ...product,
             price: Number(product.price),
-            image: product.image || "/products/placeholder.jpg",
+            images: product.images || [],
+            image: product.images?.[0] || "/products/placeholder.jpg",
         }));
     } catch (error) {
         console.error("Failed to fetch products:", error);
