@@ -26,51 +26,63 @@ export default function ProductImageGallery({
     }
 
     return (
-        <div className="relative w-full aspect-[4/3] max-h-80 bg-gray-50 flex flex-col group">
+        <div className="flex flex-col gap-3 w-full">
             {/* Main Image */}
-            <div className="relative w-full h-full overflow-hidden flex-1">
+            <div className="relative w-full aspect-[4/3] max-h-[400px] bg-gray-50 rounded-xl overflow-hidden group border border-gray-100 shadow-sm">
                 <Image
                     src={images[currentIndex]}
                     alt={`${title} - Image ${currentIndex + 1}`}
                     fill
-                    sizes="(max-width: 768px) 100vw, 40vw"
+                    sizes="(max-width: 768px) 100vw, 50vw"
                     className="object-cover transition-transform duration-500"
                     priority={currentIndex === 0}
                 />
+                
+                {/* Navigation Arrows (Only show if multiple images) */}
+                {images.length > 1 && (
+                    <>
+                        <button
+                            onClick={prevImage}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 p-2 bg-white/90 hover:bg-white rounded-full shadow-md text-gray-700 hover:text-[#F26419] transition-all opacity-0 group-hover:opacity-100 disabled:opacity-50"
+                            aria-label="Previous image"
+                        >
+                            <ChevronLeft className="w-5 h-5" />
+                        </button>
+                        <button
+                            onClick={nextImage}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-white/90 hover:bg-white rounded-full shadow-md text-gray-700 hover:text-[#F26419] transition-all opacity-0 group-hover:opacity-100 disabled:opacity-50"
+                            aria-label="Next image"
+                        >
+                            <ChevronRight className="w-5 h-5" />
+                        </button>
+                    </>
+                )}
             </div>
 
-            {/* Navigation Arrows (Only show if multiple images) */}
+            {/* Thumbnail Miniatures */}
             {images.length > 1 && (
-                <>
-                    <button
-                        onClick={prevImage}
-                        className="absolute left-2 top-1/2 -translate-y-1/2 p-1.5 bg-white/80 hover:bg-white rounded-full shadow-sm text-gray-700 hover:text-gray-900 transition-all opacity-0 group-hover:opacity-100 disabled:opacity-50"
-                        aria-label="Previous image"
-                    >
-                        <ChevronLeft className="w-5 h-5" />
-                    </button>
-                    <button
-                        onClick={nextImage}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 bg-white/80 hover:bg-white rounded-full shadow-sm text-gray-700 hover:text-gray-900 transition-all opacity-0 group-hover:opacity-100 disabled:opacity-50"
-                        aria-label="Next image"
-                    >
-                        <ChevronRight className="w-5 h-5" />
-                    </button>
-
-                    {/* Dots indicator at bottom */}
-                    <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
-                        {images.map((_, idx) => (
-                            <button
-                                key={idx}
-                                onClick={() => setCurrentIndex(idx)}
-                                className={`w-2 h-2 rounded-full transition-all ${
-                                    idx === currentIndex ? "bg-white scale-125 shadow-sm" : "bg-white/50 hover:bg-white/80"
-                                }`}
-                                aria-label={`Go to image ${idx + 1}`}
+                <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                    {images.map((src, idx) => (
+                        <button
+                            key={idx}
+                            onClick={() => setCurrentIndex(idx)}
+                            className={`relative w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all ${
+                                idx === currentIndex 
+                                    ? "border-[#F26419] opacity-100 shadow-sm" 
+                                    : "border-transparent opacity-60 hover:opacity-100"
+                            }`}
+                            aria-label={`View image ${idx + 1}`}
+                        >
+                            <Image
+                                src={src}
+                                alt={`Thumbnail ${idx + 1}`}
+                                fill
+                                sizes="96px"
+                                className="object-cover"
                             />
-                        ))}
-                    </div>
-                </>
+                        </button>
+                    ))}
+                </div>
             )}
         </div>
     )
