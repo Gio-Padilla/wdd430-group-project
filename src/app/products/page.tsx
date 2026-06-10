@@ -1,6 +1,7 @@
 import FilterBar from "@/components/ui/FilterBar";
 import { db } from "@/lib/db";
 import ProductGrid from "@/components/ui/ProductGrid";
+import { auth } from "@/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,20 @@ export default async function ProductsPage({
     searchParams: SearchParams;
 }) {
     const { category, minPrice, maxPrice } = await searchParams;
+
+    const session = await auth();
+    let favoritedProductIds: number[] = [];
+    if (session?.user?.id) {
+        try {
+            const favResult = await db.query(
+                `SELECT product_id FROM favorites WHERE user_id = $1`,
+                [session.user.id]
+            );
+            favoritedProductIds = favResult.rows.map(r => r.product_id);
+        } catch (error) {
+            console.error("Failed to fetch favorites:", error);
+        }
+    }
 
     let query = `
         SELECT
@@ -75,6 +90,7 @@ export default async function ProductsPage({
             price: Number(product.price),
             images: product.images || [],
             image: product.images?.[0] || "/products/placeholder.jpg",
+            initialFavorited: favoritedProductIds.includes(product.id),
         }));
     } catch (error) {
         console.error("Failed to fetch products:", error);

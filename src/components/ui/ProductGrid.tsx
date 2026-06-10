@@ -9,6 +9,7 @@ type Product = {
     category?: string;
     avg_rating?: number;
     review_count?: number;
+    initialFavorited?: boolean;
 };
 
 type ProductGridProps = {
@@ -39,6 +40,7 @@ export default function ProductGrid({
                     <ProductCard
                         key={product.id}
                         product={product}
+                        initialFavorited={product.initialFavorited}
                     />
                 ))}
             </div>
