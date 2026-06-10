@@ -38,6 +38,14 @@ export default function UserMenu({ user }: { user: any }) {
         <div className="absolute right-0 mt-2 w-48 bg-white border-2 border-black rounded-lg shadow-lg overflow-hidden z-50 animate-fade-in">
           <div className="flex flex-col">
             <Link
+              href="/settings"
+              onClick={() => setIsOpen(false)}
+              className="flex items-center gap-2 px-4 py-3 text-sm font-bold text-[#2F4F4F] hover:bg-gray-100 transition"
+            >
+              <UserIcon size={16} />
+              Profile Settings
+            </Link>
+            <Link
               href={isSeller ? "/dashboard" : "/account"}
               onClick={() => setIsOpen(false)}
               className="flex items-center gap-2 px-4 py-3 text-sm font-bold text-[#2F4F4F] hover:bg-gray-100 transition"

@@ -16,6 +16,8 @@ CREATE TABLE "users" (
     "name" VARCHAR(255) NOT NULL,
     "role" VARCHAR(50) NOT NULL DEFAULT 'buyer',
     "avatar_url" TEXT,
+    "banner_color" VARCHAR(50),
+    "banner_image_url" TEXT,
     "bio" TEXT,
     "location" VARCHAR(255),
     "social_links" JSONB,
