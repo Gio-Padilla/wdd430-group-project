@@ -104,7 +104,7 @@ export default async function DashboardPage() {
                     </div>
                 </Link>
 
-                <Link href="/" className="flex items-center gap-4 p-4 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-300 transition-all group">
+                <Link href={`/sellers/${session.user.id}`} className="flex items-center gap-4 p-4 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-300 transition-all group">
                     <div className="bg-gray-50 p-3 rounded-lg text-gray-700 group-hover:scale-110 group-hover:bg-gray-200 transition-all duration-300">
                         <ExternalLink size={20} />
                     </div>
