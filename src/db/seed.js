@@ -370,19 +370,48 @@ async function main() {
       const productId = res.rows[0].id;
 
       // Replicate cascading image deletion/creation behaviour
-      await client.query('DELETE FROM "product_images" WHERE product_id = $1', [productId]);
+      // ONLY delete seed-generated duplicate images (the ?lock=1 and ?lock=2 ones)
+      await client.query(`DELETE FROM "product_images" WHERE product_id = $1 AND (url LIKE '%?lock=1' OR url LIKE '%?lock=2')`, [productId]);
+      await client.query('DELETE FROM "reviews" WHERE product_id = $1', [productId]);
+
+      // Check existing images
+      const { rows: existingImages } = await client.query('SELECT url FROM "product_images" WHERE product_id = $1', [productId]);
+      const existingUrls = existingImages.map(img => img.url);
 
       const images = [
-        { url: p.imageUrl, isPrimary: true, displayOrder: 0 },
-        { url: p.imageUrl + '?lock=1', isPrimary: false, displayOrder: 1 },
-        { url: p.imageUrl + '?lock=2', isPrimary: false, displayOrder: 2 }
+        { url: p.imageUrl, isPrimary: true, displayOrder: 0 }
       ];
 
       for (const img of images) {
+        if (!existingUrls.includes(img.url) && existingUrls.length === 0) {
+          await client.query(
+            `INSERT INTO "product_images" (product_id, url, display_order, is_primary)
+             VALUES ($1, $2, $3, $4)`,
+            [productId, img.url, img.displayOrder, img.isPrimary]
+          );
+        }
+      }
+
+      // Add actual comments based on reviewCount
+      const comments = [
+        "Absolutely love this! The quality is amazing.",
+        "Really well made, exactly as pictured.",
+        "Fast shipping and gorgeous craftsmanship.",
+        "I get so many compliments on this.",
+        "Beautiful piece, perfectly matches my decor.",
+        "Great customer service and fantastic product.",
+        "Even better in person, highly recommended!",
+        "Such a unique item, very happy with my purchase."
+      ];
+      
+      for (let i = 0; i < p.reviewCount; i++) {
+        let rating = Math.min(5, Math.max(1, Math.round(p.avgRating + (Math.random() - 0.5))));
+        const comment = comments[Math.floor(Math.random() * comments.length)];
+        
         await client.query(
-          `INSERT INTO "product_images" (product_id, url, display_order, is_primary)
+          `INSERT INTO "reviews" (product_id, user_id, rating, comment)
            VALUES ($1, $2, $3, $4)`,
-          [productId, img.url, img.displayOrder, img.isPrimary]
+          [productId, userMap['buyer@example.com'], rating, comment]
         );
       }
     }
