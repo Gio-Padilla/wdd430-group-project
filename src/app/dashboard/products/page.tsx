@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Badge from '@/components/ui/Badge';
 import DeleteProductButton from '@/components/dashboard/DeleteProductButton';
 import { Plus, Edit, Image as ImageIcon } from 'lucide-react';
+import Image from 'next/image';
 
 import Pagination from '@/components/ui/Pagination';
 
@@ -32,7 +33,7 @@ export default async function DashboardProductsPage(props: { searchParams: Promi
 
   const { rows: products } = await db.query(
     `SELECT p.*, c.name as category_name, 
-            (SELECT url FROM product_images WHERE product_id = p.id AND is_primary = true LIMIT 1) as image
+            (SELECT url FROM product_images WHERE product_id = p.id ORDER BY is_primary DESC, display_order ASC LIMIT 1) as image
      FROM products p 
      LEFT JOIN categories c ON p.category_id = c.id
      WHERE p.seller_id = $1
@@ -98,7 +99,7 @@ export default async function DashboardProductsPage(props: { searchParams: Promi
                       <div className="flex items-center gap-2 sm:gap-4">
                         <div className="relative w-10 h-10 sm:w-14 sm:h-14 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 flex-shrink-0 shadow-sm group-hover:shadow-md transition-shadow">
                           {product.image ? (
-                             <img src={product.image} alt={product.title} className="object-cover w-full h-full transform group-hover:scale-105 transition-transform duration-500" />
+                             <Image src={product.image} alt={product.title} fill sizes="56px" className="object-cover w-full h-full transform group-hover:scale-105 transition-transform duration-500" />
                           ) : (
                             <div className="w-full h-full bg-gray-50 flex items-center justify-center text-gray-300">
                                 <ImageIcon size={16} className="sm:w-5 sm:h-5" />
