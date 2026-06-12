@@ -150,7 +150,7 @@ async function main() {
         tags: ['planter', 'speckled', 'ceramic'],
         avgRating: 4.8,
         reviewCount: 3,
-        imageUrl: 'https://loremflickr.com/800/800/planter,ceramic/all',
+        imageUrl: 'https://res.cloudinary.com/dyqyb9ri8/image/upload/v1781131244/ceramic-pot_xrjkmg.jpg',
       },
       {
         sellerId: userMap['artisan@example.com'],
@@ -178,7 +178,7 @@ async function main() {
         tags: ['kitchen', 'wood', 'cutting board'],
         avgRating: 4.5,
         reviewCount: 2,
-        imageUrl: 'https://loremflickr.com/800/800/cuttingboard,wood/all',
+        imageUrl: 'https://loremflickr.com/cache/resized/65535_54551110085_6272de708d_h_800_800_nofilter.jpg',
       },
       {
         sellerId: userMap['woodcrafter@example.com'],
@@ -192,7 +192,7 @@ async function main() {
         tags: ['kitchen', 'spoon', 'wood'],
         avgRating: 5.0,
         reviewCount: 4,
-        imageUrl: 'https://loremflickr.com/800/800/wooden,spoon/all',
+        imageUrl: 'https://loremflickr.com/cache/resized/3757_9427358533_e1a372ced8_h_800_800_nofilter.jpg',
       },
       {
         sellerId: userMap['weaver@example.com'],
@@ -206,7 +206,7 @@ async function main() {
         tags: ['blanket', 'wool', 'cozy'],
         avgRating: 4.9,
         reviewCount: 6,
-        imageUrl: 'https://loremflickr.com/800/800/knit,blanket/all',
+        imageUrl: 'https://loremflickr.com/cache/resized/8810_16872663298_d1e83a38a1_h_800_800_nofilter.jpg',
       },
       {
         sellerId: userMap['weaver@example.com'],
@@ -218,9 +218,9 @@ async function main() {
         inventoryQty: 7,
         status: 'active',
         tags: ['scarf', 'indigo', 'dyed'],
-        avgRating: 0,
+        avgRating: 5,
         reviewCount: 0,
-        imageUrl: 'https://loremflickr.com/800/800/scarf,indigo/all',
+        imageUrl: 'https://loremflickr.com/cache/resized/2493_4118149382_1f96c17cb4_h_800_800_nofilter.jpg',
       },
       {
         sellerId: userMap['artisan@example.com'],
@@ -234,7 +234,7 @@ async function main() {
         tags: ['ring', 'silver', 'jewelry'],
         avgRating: 4.7,
         reviewCount: 5,
-        imageUrl: 'https://loremflickr.com/800/800/silver,ring/all',
+        imageUrl: 'https://loremflickr.com/cache/resized/65535_50301603963_4d49195fdf_h_800_800_nofilter.jpg',
       },
       {
         sellerId: userMap['artisan@example.com'],
@@ -248,7 +248,7 @@ async function main() {
         tags: ['necklace', 'crystal', 'gold'],
         avgRating: 5.0,
         reviewCount: 2,
-        imageUrl: 'https://loremflickr.com/800/800/quartz,pendant/all',
+        imageUrl: 'https://loremflickr.com/cache/resized/65535_47984729423_131c6ef734_h_800_800_nofilter.jpg',
       },
       {
         sellerId: userMap['woodcrafter@example.com'],
@@ -262,7 +262,7 @@ async function main() {
         tags: ['wallet', 'leather', 'minimalist'],
         avgRating: 4.6,
         reviewCount: 8,
-        imageUrl: 'https://loremflickr.com/800/800/leather,cardholder/all',
+        imageUrl: 'https://loremflickr.com/cache/resized/65535_50417866947_c14c66904f_h_800_800_nofilter.jpg',
       },
       {
         sellerId: userMap['weaver@example.com'],
@@ -276,7 +276,7 @@ async function main() {
         tags: ['candle', 'lavender', 'soy'],
         avgRating: 4.9,
         reviewCount: 15,
-        imageUrl: 'https://loremflickr.com/800/800/candles,candle/all',
+        imageUrl: 'https://res.cloudinary.com/dyqyb9ri8/image/upload/v1781132529/all_dkyh0q.webp',
       },
       {
         sellerId: userMap['artisan@example.com'],
@@ -290,7 +290,7 @@ async function main() {
         tags: ['art', 'print', 'botanical'],
         avgRating: 5.0,
         reviewCount: 4,
-        imageUrl: 'https://loremflickr.com/800/800/art,print/all',
+        imageUrl: 'https://loremflickr.com/cache/resized/65535_51913991942_2d4e5ed5c5_h_800_800_nofilter.jpg',
       },
       {
         sellerId: userMap['weaver@example.com'],
@@ -304,7 +304,7 @@ async function main() {
         tags: ['macrame', 'plants', 'decor'],
         avgRating: 4.8,
         reviewCount: 7,
-        imageUrl: 'https://loremflickr.com/800/800/macrame,plant/all',
+        imageUrl: 'https://loremflickr.com/cache/resized/3410_3182708951_0485aa0cc5_h_800_800_nofilter.jpg',
       },
       {
         sellerId: userMap['woodcrafter@example.com'],
@@ -318,7 +318,7 @@ async function main() {
         tags: ['kitchen', 'wood', 'cutting board'],
         avgRating: 4.9,
         reviewCount: 12,
-        imageUrl: 'https://loremflickr.com/800/800/walnut,cuttingboard/all',
+        imageUrl: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=900&h=900&fit=crop',
       },
       {
         sellerId: userMap['artisan@example.com'],
@@ -332,7 +332,7 @@ async function main() {
         tags: ['bowl', 'minimalist', 'set'],
         avgRating: 5.0,
         reviewCount: 8,
-        imageUrl: 'https://loremflickr.com/800/800/white,bowls/all',
+        imageUrl: 'https://loremflickr.com/cache/resized/3433_3230006405_7e7b2a681d_h_800_800_nofilter.jpg',
       }
     ];
 
