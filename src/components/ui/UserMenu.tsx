@@ -46,7 +46,7 @@ export default function UserMenu({ user }: { user: any }) {
               Profile Settings
             </Link>
             <Link
-              href={isSeller ? "/dashboard" : "/account"}
+              href={isSeller ? "/dashboard" : "/my-account"}
               onClick={() => setIsOpen(false)}
               className="flex items-center gap-2 px-4 py-3 text-sm font-bold text-[#2F4F4F] hover:bg-gray-100 transition"
             >
