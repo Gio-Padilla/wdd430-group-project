@@ -9,6 +9,8 @@ type SearchParams = Promise<{
     category?: string;
     minPrice?: string;
     maxPrice?: string;
+    q?: string;
+    minRating?: string;
 }>;
 
 const categoriesResult = await db.query(`
@@ -22,7 +24,7 @@ export default async function ProductsPage({
 }: {
     searchParams: SearchParams;
 }) {
-    const { category, minPrice, maxPrice } = await searchParams;
+    const { category, minPrice, maxPrice, q, minRating } = await searchParams;
 
     const session = await auth();
     let favoritedProductIds: number[] = [];
@@ -60,6 +62,12 @@ export default async function ProductsPage({
     const values: (string | number)[] = [];
     let paramCount = 1;
 
+    if (q) {
+        query += ` AND (p.title ILIKE $${paramCount} OR p.description ILIKE $${paramCount})`;
+        values.push(`%${q}%`);
+        paramCount++;
+    }
+
     if (category) {
         query += ` AND p.category_id = $${paramCount}`;
         values.push(category);
@@ -75,6 +83,12 @@ export default async function ProductsPage({
     if (maxPrice) {
         query += ` AND p.price <= $${paramCount}`;
         values.push(Number(maxPrice));
+        paramCount++;
+    }
+
+    if (minRating) {
+        query += ` AND p.avg_rating >= $${paramCount}`;
+        values.push(Number(minRating));
         paramCount++;
     }
 

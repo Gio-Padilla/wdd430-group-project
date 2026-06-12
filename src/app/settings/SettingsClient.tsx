@@ -5,13 +5,16 @@ import { useRouter } from "next/navigation";
 import CloudinaryUploadButton from "@/components/ui/CloudinaryUploadButton";
 import Image from "next/image";
 import { logoutAction } from "@/lib/actions/auth";
+import { toast } from "react-hot-toast";
+import Modal from "@/components/ui/Modal";
 
 export default function SettingsClient({ user }: { user: any }) {
     const router = useRouter();
     const isSeller = user.role === "seller";
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
-    const [success, setSuccess] = useState("");
+
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const [formData, setFormData] = useState({
         name: user.name || "",
@@ -60,8 +63,8 @@ export default function SettingsClient({ user }: { user: any }) {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        setError("");
-        setSuccess("");
+
+        const toastId = toast.loading("Saving changes...");
 
         try {
             const res = await fetch("/api/profile", {
@@ -75,28 +78,32 @@ export default function SettingsClient({ user }: { user: any }) {
                 throw new Error(text || "Failed to update profile");
             }
 
-            setSuccess("Profile updated successfully!");
+            toast.success("Profile updated successfully!", { id: toastId });
             router.refresh();
         } catch (err: any) {
-            setError(err.message);
+            toast.error(err.message || "Failed to update profile", { id: toastId });
         } finally {
             setLoading(false);
         }
     };
 
     const handleDeleteAccount = async () => {
-        if (confirm("Are you absolutely sure you want to delete your account? This action cannot be undone.")) {
-            try {
-                const res = await fetch("/api/profile", { method: "DELETE" });
-                if (res.ok) {
-                    await logoutAction();
-                } else {
-                    alert("Failed to delete account");
-                }
-            } catch (err) {
-                console.error(err);
-                alert("Error deleting account");
+        setIsDeleting(true);
+        const toastId = toast.loading("Deleting account...");
+
+        try {
+            const res = await fetch("/api/profile", { method: "DELETE" });
+            if (res.ok) {
+                toast.success("Account deleted successfully.", { id: toastId });
+                await logoutAction();
+            } else {
+                toast.error("Failed to delete account", { id: toastId });
+                setIsDeleting(false);
             }
+        } catch (err) {
+            console.error(err);
+            toast.error("Error deleting account", { id: toastId });
+            setIsDeleting(false);
         }
     };
 
@@ -104,9 +111,6 @@ export default function SettingsClient({ user }: { user: any }) {
         <div className="space-y-8">
             <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8 space-y-8">
                 
-                {error && <div className="p-4 bg-red-50 text-red-600 rounded-lg">{error}</div>}
-                {success && <div className="p-4 bg-green-50 text-green-600 rounded-lg">{success}</div>}
-
                 {/* General Settings */}
                 <div>
                     <h2 className="text-xl font-bold text-gray-900 mb-4">General Information</h2>
@@ -178,101 +182,6 @@ export default function SettingsClient({ user }: { user: any }) {
                     </div>
                 </div>
 
-                {isSeller && (
-                    <>
-                        <div className="border-t border-gray-100 pt-8">
-                            <h2 className="text-xl font-bold text-gray-900 mb-4">Storefront Customization</h2>
-                            <div className="grid grid-cols-1 gap-6">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Banner Image</label>
-                                    <p className="text-sm text-gray-500 mb-3">Upload a wide image to display at the top of your seller profile.</p>
-                                    {formData.banner_image_url && (
-                                        <div className="w-full h-32 relative rounded-lg overflow-hidden mb-4 border border-gray-200">
-                                            <Image src={formData.banner_image_url} alt="Banner" fill className="object-cover" />
-                                            <button 
-                                                type="button" 
-                                                onClick={() => setFormData(prev => ({...prev, banner_image_url: ""}))}
-                                                className="absolute top-2 right-2 bg-white/80 hover:bg-red-50 text-red-600 px-3 py-1 rounded-md text-sm font-semibold transition"
-                                            >
-                                                Remove
-                                            </button>
-                                        </div>
-                                    )}
-                                    {!formData.banner_image_url && (
-                                        <CloudinaryUploadButton onUpload={handleBannerUpload} />
-                                    )}
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Banner Color Fallback</label>
-                                    <p className="text-sm text-gray-500 mb-2">If no image is uploaded, this color will be used.</p>
-                                    <div className="flex items-center gap-4">
-                                        <input
-                                            type="color"
-                                            name="banner_color"
-                                            value={formData.banner_color}
-                                            onChange={handleChange}
-                                            className="w-12 h-12 p-1 border border-gray-300 rounded cursor-pointer"
-                                        />
-                                        <span className="text-sm text-gray-600 uppercase font-mono">{formData.banner_color}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="border-t border-gray-100 pt-8">
-                            <h2 className="text-xl font-bold text-gray-900 mb-4">Social Media Links</h2>
-                            <p className="text-sm text-gray-500 mb-4">Add the full URL to your social profiles. Leave blank to hide the icon.</p>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">WhatsApp</label>
-                                    <input
-                                        type="url"
-                                        name="whatsapp"
-                                        value={formData.social_links.whatsapp}
-                                        onChange={handleSocialChange}
-                                        placeholder="https://wa.me/..."
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2F4F4F]"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Instagram</label>
-                                    <input
-                                        type="url"
-                                        name="instagram"
-                                        value={formData.social_links.instagram}
-                                        onChange={handleSocialChange}
-                                        placeholder="https://instagram.com/..."
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2F4F4F]"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">TikTok</label>
-                                    <input
-                                        type="url"
-                                        name="tiktok"
-                                        value={formData.social_links.tiktok}
-                                        onChange={handleSocialChange}
-                                        placeholder="https://tiktok.com/@..."
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2F4F4F]"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Facebook</label>
-                                    <input
-                                        type="url"
-                                        name="facebook"
-                                        value={formData.social_links.facebook}
-                                        onChange={handleSocialChange}
-                                        placeholder="https://facebook.com/..."
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2F4F4F]"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </>
-                )}
-
                 <div className="pt-6 flex justify-end">
                     <button
                         type="submit"
@@ -284,16 +193,142 @@ export default function SettingsClient({ user }: { user: any }) {
                 </div>
             </form>
 
+            {isSeller && (
+                <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8 space-y-8">
+                    <div className="pt-2">
+                        <h2 className="text-xl font-bold text-gray-900 mb-4">Storefront Customization</h2>
+                        <div className="grid grid-cols-1 gap-6">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Banner Image</label>
+                                <p className="text-sm text-gray-500 mb-3">Upload a wide image to display at the top of your seller profile.</p>
+                                {formData.banner_image_url && (
+                                    <div className="w-full h-32 relative rounded-lg overflow-hidden mb-4 border border-gray-200">
+                                        <Image src={formData.banner_image_url} alt="Banner" fill className="object-cover" />
+                                        <button 
+                                            type="button" 
+                                            onClick={() => setFormData(prev => ({...prev, banner_image_url: ""}))}
+                                            className="absolute top-2 right-2 bg-white/80 hover:bg-red-50 text-red-600 px-3 py-1 rounded-md text-sm font-semibold transition"
+                                        >
+                                            Remove
+                                        </button>
+                                    </div>
+                                )}
+                                {!formData.banner_image_url && (
+                                    <CloudinaryUploadButton onUpload={handleBannerUpload} />
+                                )}
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Banner Color Fallback</label>
+                                <p className="text-sm text-gray-500 mb-2">If no image is uploaded, this color will be used.</p>
+                                <div className="flex items-center gap-4">
+                                    <input
+                                        type="color"
+                                        name="banner_color"
+                                        value={formData.banner_color}
+                                        onChange={handleChange}
+                                        className="w-12 h-12 p-1 border border-gray-300 rounded cursor-pointer"
+                                    />
+                                    <span className="text-sm text-gray-600 uppercase font-mono">{formData.banner_color}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="border-t border-gray-100 pt-8">
+                        <h2 className="text-xl font-bold text-gray-900 mb-4">Social Media Links</h2>
+                        <p className="text-sm text-gray-500 mb-4">Add the full URL to your social profiles. Leave blank to hide the icon.</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">WhatsApp</label>
+                                <input
+                                    type="url"
+                                    name="whatsapp"
+                                    value={formData.social_links.whatsapp}
+                                    onChange={handleSocialChange}
+                                    placeholder="https://wa.me/..."
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2F4F4F]"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Instagram</label>
+                                <input
+                                    type="url"
+                                    name="instagram"
+                                    value={formData.social_links.instagram}
+                                    onChange={handleSocialChange}
+                                    placeholder="https://instagram.com/..."
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2F4F4F]"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">TikTok</label>
+                                <input
+                                    type="url"
+                                    name="tiktok"
+                                    value={formData.social_links.tiktok}
+                                    onChange={handleSocialChange}
+                                    placeholder="https://tiktok.com/@..."
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2F4F4F]"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Facebook</label>
+                                <input
+                                    type="url"
+                                    name="facebook"
+                                    value={formData.social_links.facebook}
+                                    onChange={handleSocialChange}
+                                    placeholder="https://facebook.com/..."
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2F4F4F]"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="pt-6 flex justify-end">
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="px-6 py-2.5 bg-[#2F4F4F] hover:bg-[#1a2e2e] text-white font-bold rounded-lg shadow-sm transition disabled:opacity-50"
+                        >
+                            {loading ? "Saving..." : "Save Changes"}
+                        </button>
+                    </div>
+                </form>
+            )}
+
             <div className="bg-red-50 rounded-2xl border border-red-100 p-6 sm:p-8">
                 <h2 className="text-xl font-bold text-red-700 mb-2">Danger Zone</h2>
                 <p className="text-red-600 mb-4">Once you delete your account, there is no going back. Please be certain.</p>
                 <button
-                    onClick={handleDeleteAccount}
+                    onClick={() => setIsDeleteModalOpen(true)}
                     className="px-4 py-2 bg-white text-red-600 border border-red-200 hover:bg-red-600 hover:text-white font-bold rounded-lg transition"
                 >
                     Delete Account
                 </button>
             </div>
+
+            <Modal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                title="Delete Account"
+                description="Are you absolutely sure you want to delete your account? All of your products, reviews, and data will be permanently removed. This action cannot be undone."
+                actionButton={
+                    <button
+                        onClick={handleDeleteAccount}
+                        disabled={isDeleting}
+                        className="px-4 py-2 font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+                    >
+                        {isDeleting && <span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />}
+                        Yes, delete my account
+                    </button>
+                }
+            >
+                <p className="text-sm text-gray-700 mb-2 bg-red-50 p-3 rounded-lg border border-red-100">
+                    <strong>Warning:</strong> You will immediately be logged out and lose access to all your order history.
+                </p>
+            </Modal>
         </div>
     );
 }

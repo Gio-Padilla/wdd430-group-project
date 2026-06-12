@@ -108,7 +108,7 @@ export default function ProductCard({
                             ${Number(product.price).toFixed(2)}
                         </p>
 
-                        {product.avg_rating !== undefined && product.avg_rating > 0 && (
+                        {product.avg_rating !== undefined && (
                             <div className="flex items-center gap-0.5 text-xs text-gray-500">
                                 <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
                                 <span className="font-medium text-gray-700">

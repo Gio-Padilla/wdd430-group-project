@@ -6,6 +6,7 @@ import { products as fallbackProducts } from "@/data/products";
 import { Star, ArrowLeft } from "lucide-react";
 import AddToFavoritesButton from "@/components/favorites/AddToFavoritesButton";
 import ProductImageGallery from "@/components/products/ProductImageGallery";
+import ProductReviews from "@/components/products/ProductReviews";
 
 type Props = {
     params: Promise<{
@@ -109,16 +110,8 @@ export default async function ProductDetailPage({ params }: Props) {
         );
     }
 
-    const averageRating =
-        reviews.length > 0
-            ? (
-                  reviews.reduce(
-                      (sum, review) =>
-                          sum + review.rating,
-                      0
-                  ) / reviews.length
-              ).toFixed(1)
-            : "0.0";
+    const averageRating = product.avg_rating ? Number(product.avg_rating).toFixed(1) : "0.0";
+    const reviewCount = product.review_count || 0;
 
     return (
         <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
@@ -162,7 +155,7 @@ export default async function ProductDetailPage({ params }: Props) {
                                     </span>
                                 </div>
                                 <span className="text-sm text-gray-400">
-                                    ({reviews.length} {reviews.length === 1 ? "review" : "reviews"})
+                                    ({reviewCount} {reviewCount === 1 ? "review" : "reviews"})
                                 </span>
                             </div>
 
@@ -197,86 +190,12 @@ export default async function ProductDetailPage({ params }: Props) {
                 </div>
             </div>
 
-            {/* Reviews Section */}
-            <section className="mt-10 sm:mt-14">
-
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                    <h2 className="text-2xl font-bold text-[#2F4F4F]">
-                        Reviews ({reviews.length})
-                    </h2>
-
-                    {!session?.user ? (
-                        <Link
-                            href="/account"
-                            className="inline-flex items-center justify-center gap-2 bg-[#2F4F4F] hover:bg-[#F26419] text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300"
-                        >
-                            Sign In to Review
-                        </Link>
-                    ) : session.user.role === "buyer" ? (
-                        <Link
-                            href={`/products/${product.id}/review`}
-                            className="inline-flex items-center justify-center gap-2 bg-[#2F4F4F] hover:bg-[#F26419] text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300"
-                        >
-                            Write a Review
-                        </Link>
-                    ) : null}
-                </div>
-
-                {reviews.length === 0 ? (
-                    <div className="bg-white rounded-2xl border border-gray-200 p-10 text-center shadow-sm">
-                        <Star className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                        <p className="text-gray-500">
-                            No reviews yet. Be the first to share your thoughts!
-                        </p>
-                    </div>
-                ) : (
-                    <div className="space-y-4">
-                        {reviews.map((review) => (
-                            <div
-                                key={review.id}
-                                className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 shadow-sm"
-                            >
-                                <div className="flex items-center justify-between mb-3">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-9 h-9 rounded-full bg-[#2F4F4F] flex items-center justify-center text-white font-bold text-sm">
-                                            {review.name?.charAt(0).toUpperCase()}
-                                        </div>
-                                        <div>
-                                            <h3 className="font-semibold text-gray-900 text-sm">
-                                                {review.name}
-                                            </h3>
-                                            <p className="text-xs text-gray-400">
-                                                {new Date(review.created_at).toLocaleDateString("en-US", {
-                                                    year: "numeric",
-                                                    month: "long",
-                                                    day: "numeric",
-                                                })}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center gap-0.5">
-                                        {Array.from({ length: 5 }).map((_, i) => (
-                                            <Star
-                                                key={i}
-                                                className={`w-4 h-4 ${
-                                                    i < review.rating
-                                                        ? "fill-yellow-400 text-yellow-400"
-                                                        : "text-gray-200"
-                                                }`}
-                                            />
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <p className="text-gray-700 leading-relaxed">
-                                    {review.comment}
-                                </p>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </section>
+            <ProductReviews 
+                productId={Number(product.id)}
+                initialReviews={reviews}
+                sessionUser={session?.user}
+                reviewCount={reviewCount}
+            />
 
         </main>
     );
