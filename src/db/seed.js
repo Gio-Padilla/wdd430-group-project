@@ -86,51 +86,56 @@ async function main() {
     // 2. Seed Users
     console.log('Seeding users...');
     const passwordHash = await bcrypt.hash('password123', 10);
-
-    const usersData = [
+    const users = [
+      {
+        email: 'buyer@example.com',
+        name: 'Alex Shopper',
+        role: 'buyer',
+        avatarUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&h=200&fit=crop&crop=face',
+        bannerColor: '#2F4F4F',
+        socialLinks: null
+      },
       {
         email: 'artisan@example.com',
-        name: 'Elena Ramos',
+        name: 'Sarah Crafts',
         role: 'seller',
-        bio: 'Creating beautiful ceramics and art inspired by nature in my home studio.',
+        bio: 'Passionate about creating unique ceramic pieces.',
         location: 'Portland, OR',
-        avatarUrl: 'https://loremflickr.com/200/200/woman,portrait/all',
+        avatarUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop&crop=face',
+        bannerColor: '#f28b82',
+        socialLinks: { instagram: 'https://instagram.com', website: 'https://example.com' }
       },
       {
         email: 'woodcrafter@example.com',
-        name: 'Marcus Wood',
+        name: 'Mark Woods',
         role: 'seller',
-        bio: 'Custom woodworking using reclaimed timber and traditional techniques.',
+        bio: 'Sustainable woodworking from salvaged timber.',
         location: 'Austin, TX',
-        avatarUrl: 'https://loremflickr.com/200/200/man,portrait/all',
+        avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face',
+        bannerColor: '#fbbc04',
+        socialLinks: { facebook: 'https://facebook.com' }
       },
       {
         email: 'weaver@example.com',
-        name: 'Chloe Weaver',
+        name: 'Elena Thread',
         role: 'seller',
-        bio: 'Passionate about sustainable textiles, natural dyes, and cozy living.',
-        location: 'Denver, CO',
-        avatarUrl: 'https://loremflickr.com/200/200/girl,portrait/all',
-      },
-      {
-        email: 'buyer@example.com',
-        name: 'Sarah Customer',
-        role: 'buyer',
-        bio: null,
-        location: null,
-        avatarUrl: null,
+        bio: 'Handwoven textiles and modern macrame.',
+        location: 'Brooklyn, NY',
+        avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop&crop=face',
+        bannerColor: '#ccff90',
+        socialLinks: { instagram: 'https://instagram.com', twitter: 'https://twitter.com', website: 'https://example.com' }
       }
     ];
 
     const userMap = {};
-    for (const u of usersData) {
+    for (const u of users) {
       const res = await client.query(
-        `INSERT INTO "users" (email, password_hash, name, role, bio, location, avatar_url)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
+        `INSERT INTO "users" (email, password_hash, name, role, bio, location, avatar_url, banner_color, social_links)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
          ON CONFLICT (email) 
-         DO UPDATE SET name = EXCLUDED.name -- Dummy update to ensure we return ID if user exists
+         DO UPDATE SET name = EXCLUDED.name, avatar_url = EXCLUDED.avatar_url, banner_color = EXCLUDED.banner_color, social_links = EXCLUDED.social_links
          RETURNING id, email`,
-        [u.email, passwordHash, u.name, u.role, u.bio, u.location, u.avatarUrl]
+        [u.email, passwordHash, u.name, u.role, u.bio, u.location, u.avatarUrl, u.bannerColor, u.socialLinks]
       );
       userMap[res.rows[0].email] = res.rows[0].id;
     }
@@ -150,7 +155,9 @@ async function main() {
         tags: ['planter', 'speckled', 'ceramic'],
         avgRating: 4.8,
         reviewCount: 3,
-        imageUrl: 'https://res.cloudinary.com/dyqyb9ri8/image/upload/v1781131244/ceramic-pot_xrjkmg.jpg',
+        images: [
+          'https://res.cloudinary.com/dyqyb9ri8/image/upload/v1781131244/ceramic-pot_xrjkmg.jpg'
+        ],
       },
       {
         sellerId: userMap['artisan@example.com'],
@@ -164,7 +171,10 @@ async function main() {
         tags: ['bowl', 'tea', 'matcha'],
         avgRating: 5.0,
         reviewCount: 1,
-        imageUrl: 'https://loremflickr.com/800/800/matcha,bowl/all',
+        images: [
+          'https://res.cloudinary.com/dyqyb9ri8/image/upload/v1781334376/k1g1qvx80rywkavimu0f.webp',
+          'https://res.cloudinary.com/dyqyb9ri8/image/upload/v1781334376/zwsxwg5ghkyt3sqyfpgd.webp'
+        ],
       },
       {
         sellerId: userMap['woodcrafter@example.com'],
@@ -178,7 +188,10 @@ async function main() {
         tags: ['kitchen', 'wood', 'cutting board'],
         avgRating: 4.5,
         reviewCount: 2,
-        imageUrl: 'https://loremflickr.com/cache/resized/65535_54551110085_6272de708d_h_800_800_nofilter.jpg',
+        images: [
+          'https://res.cloudinary.com/dyqyb9ri8/image/upload/v1781306384/dreirockzyiteuiquf73.webp',
+          'https://res.cloudinary.com/dyqyb9ri8/image/upload/v1781306384/yjqta9ln9uqw5p9ziyyh.webp'
+        ],
       },
       {
         sellerId: userMap['woodcrafter@example.com'],
@@ -192,7 +205,10 @@ async function main() {
         tags: ['kitchen', 'spoon', 'wood'],
         avgRating: 5.0,
         reviewCount: 4,
-        imageUrl: 'https://loremflickr.com/cache/resized/3757_9427358533_e1a372ced8_h_800_800_nofilter.jpg',
+        images: [
+          'https://res.cloudinary.com/dyqyb9ri8/image/upload/v1781306434/rf9ffs3eudvtg0gs7edr.webp',
+          'https://res.cloudinary.com/dyqyb9ri8/image/upload/v1781307077/zjpp8ffhlbxbrl7w79ti.webp'
+        ],
       },
       {
         sellerId: userMap['weaver@example.com'],
@@ -206,7 +222,9 @@ async function main() {
         tags: ['blanket', 'wool', 'cozy'],
         avgRating: 4.9,
         reviewCount: 6,
-        imageUrl: 'https://loremflickr.com/cache/resized/8810_16872663298_d1e83a38a1_h_800_800_nofilter.jpg',
+        images: [
+          'https://res.cloudinary.com/dyqyb9ri8/image/upload/v1781334233/attunutzjim4m45obrko.webp'
+        ],
       },
       {
         sellerId: userMap['weaver@example.com'],
@@ -220,7 +238,9 @@ async function main() {
         tags: ['scarf', 'indigo', 'dyed'],
         avgRating: 5,
         reviewCount: 0,
-        imageUrl: 'https://loremflickr.com/cache/resized/2493_4118149382_1f96c17cb4_h_800_800_nofilter.jpg',
+        images: [
+          'https://res.cloudinary.com/dyqyb9ri8/image/upload/v1781334251/ljiebt1qlccavowoxvb7.webp'
+        ],
       },
       {
         sellerId: userMap['artisan@example.com'],
@@ -234,7 +254,9 @@ async function main() {
         tags: ['ring', 'silver', 'jewelry'],
         avgRating: 4.7,
         reviewCount: 5,
-        imageUrl: 'https://loremflickr.com/cache/resized/65535_50301603963_4d49195fdf_h_800_800_nofilter.jpg',
+        images: [
+          'https://res.cloudinary.com/dyqyb9ri8/image/upload/v1781306052/dn9l9aeooag29mgaptlv.webp'
+        ],
       },
       {
         sellerId: userMap['artisan@example.com'],
@@ -248,7 +270,9 @@ async function main() {
         tags: ['necklace', 'crystal', 'gold'],
         avgRating: 5.0,
         reviewCount: 2,
-        imageUrl: 'https://loremflickr.com/cache/resized/65535_47984729423_131c6ef734_h_800_800_nofilter.jpg',
+        images: [
+          'https://res.cloudinary.com/dyqyb9ri8/image/upload/v1781306102/ehnkckkbd5yofpiwetpu.webp'
+        ],
       },
       {
         sellerId: userMap['woodcrafter@example.com'],
@@ -262,7 +286,9 @@ async function main() {
         tags: ['wallet', 'leather', 'minimalist'],
         avgRating: 4.6,
         reviewCount: 8,
-        imageUrl: 'https://loremflickr.com/cache/resized/65535_50417866947_c14c66904f_h_800_800_nofilter.jpg',
+        images: [
+          'https://res.cloudinary.com/dyqyb9ri8/image/upload/v1781307044/crxocn7fsv0wzdtz1uju.webp'
+        ],
       },
       {
         sellerId: userMap['weaver@example.com'],
@@ -276,7 +302,9 @@ async function main() {
         tags: ['candle', 'lavender', 'soy'],
         avgRating: 4.9,
         reviewCount: 15,
-        imageUrl: 'https://res.cloudinary.com/dyqyb9ri8/image/upload/v1781132529/all_dkyh0q.webp',
+        images: [
+          'https://res.cloudinary.com/dyqyb9ri8/image/upload/v1781132529/all_dkyh0q.webp'
+        ],
       },
       {
         sellerId: userMap['artisan@example.com'],
@@ -290,7 +318,9 @@ async function main() {
         tags: ['art', 'print', 'botanical'],
         avgRating: 5.0,
         reviewCount: 4,
-        imageUrl: 'https://loremflickr.com/cache/resized/65535_51913991942_2d4e5ed5c5_h_800_800_nofilter.jpg',
+        images: [
+          'https://res.cloudinary.com/dyqyb9ri8/image/upload/v1781306136/zomtey500egza2dnegyo.webp'
+        ],
       },
       {
         sellerId: userMap['weaver@example.com'],
@@ -304,7 +334,10 @@ async function main() {
         tags: ['macrame', 'plants', 'decor'],
         avgRating: 4.8,
         reviewCount: 7,
-        imageUrl: 'https://loremflickr.com/cache/resized/3410_3182708951_0485aa0cc5_h_800_800_nofilter.jpg',
+        images: [
+          'https://res.cloudinary.com/dyqyb9ri8/image/upload/v1781334267/sxqy5pz1rjnja0d6zvyo.webp',
+          'https://res.cloudinary.com/dyqyb9ri8/image/upload/v1781334268/kva6dpnruhzbkt9jgrtw.webp'
+        ],
       },
       {
         sellerId: userMap['woodcrafter@example.com'],
@@ -318,7 +351,9 @@ async function main() {
         tags: ['kitchen', 'wood', 'cutting board'],
         avgRating: 4.9,
         reviewCount: 12,
-        imageUrl: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=900&h=900&fit=crop',
+        images: [
+          'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=900&h=900&fit=crop'
+        ],
       },
       {
         sellerId: userMap['artisan@example.com'],
@@ -332,7 +367,9 @@ async function main() {
         tags: ['bowl', 'minimalist', 'set'],
         avgRating: 5.0,
         reviewCount: 8,
-        imageUrl: 'https://loremflickr.com/cache/resized/3433_3230006405_7e7b2a681d_h_800_800_nofilter.jpg',
+        images: [
+          'https://res.cloudinary.com/dyqyb9ri8/image/upload/v1781306000/zc2eaphlavodksvpnpui.webp'
+        ],
       }
     ];
 
@@ -369,21 +406,21 @@ async function main() {
 
       const productId = res.rows[0].id;
 
-      // Replicate cascading image deletion/creation behaviour
-      // ONLY delete seed-generated duplicate images (the ?lock=1 and ?lock=2 ones)
-      await client.query(`DELETE FROM "product_images" WHERE product_id = $1 AND (url LIKE '%?lock=1' OR url LIKE '%?lock=2')`, [productId]);
+      // Prevent review duplication when running seed multiple times
       await client.query('DELETE FROM "reviews" WHERE product_id = $1', [productId]);
 
       // Check existing images
       const { rows: existingImages } = await client.query('SELECT url FROM "product_images" WHERE product_id = $1', [productId]);
       const existingUrls = existingImages.map(img => img.url);
 
-      const images = [
-        { url: p.imageUrl, isPrimary: true, displayOrder: 0 }
-      ];
+      const imageRecords = p.images.map((url, idx) => ({
+        url,
+        isPrimary: idx === 0,
+        displayOrder: idx
+      }));
 
-      for (const img of images) {
-        if (!existingUrls.includes(img.url) && existingUrls.length === 0) {
+      for (const img of imageRecords) {
+        if (!existingUrls.includes(img.url)) {
           await client.query(
             `INSERT INTO "product_images" (product_id, url, display_order, is_primary)
              VALUES ($1, $2, $3, $4)`,

@@ -21,10 +21,9 @@ Handcrafted Haven is a beautiful, community-driven marketplace connecting indepe
 ## Tech Stack
 
 - **Framework:** [Next.js 16+](https://nextjs.org/) (App Router, Server Actions)
-- **Styling:** Vanilla CSS with custom Tailwind-like utility classes and Tailwind CSS v4
-- **Database:** PostgreSQL (via [Render](https://render.com) or [Neon](https://neon.com))
-- **ORM:** [Prisma](https://www.prisma.io/)
-- **Authentication:** Custom JWT-based authentication (jose + bcryptjs)
+- **Styling:** Vanilla CSS, Tailwind CSS, and [Framer Motion](https://www.framer.com/motion/) for animations
+- **Database:** PostgreSQL via [pg](https://node-postgres.com/) (Raw SQL queries, no ORM)
+- **Authentication:** [NextAuth.js v5](https://authjs.dev/) (Credentials strategy + bcryptjs)
 - **Image Hosting:** [Cloudinary](https://cloudinary.com)
 - **Icons:** [Lucide React](https://lucide.dev/)
 
@@ -35,11 +34,15 @@ Handcrafted Haven is a beautiful, community-driven marketplace connecting indepe
 ### Prerequisites
 - Node.js (v18+)
 - `pnpm` package manager
-- A PostgreSQL database URL
-- A Cloudinary account
+- A PostgreSQL database (`DATABASE_URL`)
+- NextAuth Secret (`AUTH_SECRET`)
+- Cloudinary Credentials (`CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`)
 
 ### Run Locally
 ```bash
+pnpm install
+pnpm db:init
+pnpm run seed  # (Optional) Seed the database with initial dummy data
 pnpm dev
 ```
 
