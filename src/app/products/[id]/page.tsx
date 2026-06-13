@@ -67,6 +67,7 @@ export default async function ProductDetailPage({ params }: Props) {
                 r.rating,
                 r.comment,
                 r.created_at,
+                r.user_id,
                 u.name
             FROM reviews r
             INNER JOIN users u
