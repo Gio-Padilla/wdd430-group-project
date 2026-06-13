@@ -115,7 +115,7 @@ export default async function ProductDetailPage({ params }: Props) {
     const reviewCount = product.review_count || 0;
 
     return (
-        <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10 w-full min-w-0 overflow-hidden">
 
             {/* Breadcrumb */}
             <Link
@@ -143,12 +143,12 @@ export default async function ProductDetailPage({ params }: Props) {
                                 </span>
                             )}
 
-                            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 leading-tight">
+                            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 leading-tight break-words">
                                 {product.title}
                             </h1>
 
                             {/* Rating Row */}
-                            <div className="flex items-center gap-2 mb-4">
+                            <div className="flex flex-wrap items-center gap-2 mb-4">
                                 <div className="flex items-center gap-1">
                                     <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
                                     <span className="font-semibold text-gray-900">
@@ -160,13 +160,13 @@ export default async function ProductDetailPage({ params }: Props) {
                                 </span>
                             </div>
 
-                            <p className="text-gray-600 leading-relaxed mb-6">
+                            <p className="text-gray-600 leading-relaxed mb-6 break-words">
                                 {product.description}
                             </p>
 
                             {/* Seller */}
                             {product.seller_name && (
-                                <p className="text-sm text-gray-500 mb-6">
+                                <p className="text-sm text-gray-500 mb-6 break-words">
                                     Crafted by{" "}
                                     <Link href={`/sellers/${product.seller_id}`} className="font-semibold text-[#2F4F4F] underline underline-offset-2 decoration-[#2F4F4F]/30 hover:text-[#F26419] hover:decoration-[#F26419] transition-colors">
                                         {product.seller_name}
@@ -198,6 +198,6 @@ export default async function ProductDetailPage({ params }: Props) {
                 reviewCount={reviewCount}
             />
 
-        </main>
+        </div>
     );
 }

@@ -4,6 +4,8 @@ import Image from "next/image"
 import { useState, useEffect } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 
+import { createPortal } from "react-dom"
+
 export default function ProductImageGallery({
     images,
     title
@@ -15,6 +17,11 @@ export default function ProductImageGallery({
     const [isZoomed, setIsZoomed] = useState(false)
     const [zoomStyle, setZoomStyle] = useState<React.CSSProperties>({ transform: 'scale(1)' })
     const [isFullscreen, setIsFullscreen] = useState(false)
+    const [mounted, setMounted] = useState(false)
+
+    useEffect(() => {
+        setMounted(true)
+    }, [])
 
     useEffect(() => {
         if (isFullscreen) {
@@ -62,7 +69,7 @@ export default function ProductImageGallery({
     }
 
     return (
-        <div className="flex flex-col gap-3 w-full">
+        <div className="flex flex-col gap-3 w-full min-w-0">
             {/* Main Image */}
             <div 
                 className="relative w-full aspect-[4/3] max-h-[400px] bg-gray-50 rounded-xl overflow-hidden group border border-gray-100 shadow-sm cursor-zoom-in"
@@ -132,10 +139,10 @@ export default function ProductImageGallery({
                 </div>
             )}
 
-            {/* Fullscreen Lightbox */}
-            {isFullscreen && (
+            {/* Fullscreen Lightbox via Portal */}
+            {isFullscreen && mounted && createPortal(
                 <div 
-                    className="fixed inset-0 z-[9999] bg-black/95 cursor-zoom-out"
+                    className="fixed inset-0 z-[999999] bg-black/95 cursor-zoom-out p-4 md:p-16 flex flex-col"
                     onClick={() => setIsFullscreen(false)}
                 >
                     <button 
@@ -143,20 +150,22 @@ export default function ProductImageGallery({
                             e.stopPropagation();
                             setIsFullscreen(false);
                         }}
-                        className="absolute top-4 right-4 text-white hover:text-[#F26419] p-2 text-4xl leading-none z-[10000] transition-colors"
+                        className="absolute top-4 right-4 text-white hover:text-[#F26419] p-2 text-4xl leading-none z-[1000000] transition-colors"
                         aria-label="Close fullscreen"
                     >
                         &times;
                     </button>
                     
-                    <Image
-                        src={images[currentIndex]}
-                        alt={`${title} - Fullscreen`}
-                        fill
-                        sizes="100vw"
-                        className="object-contain p-4 md:p-16"
-                        priority
-                    />
+                    <div className="relative flex-1 w-full" onClick={(e) => e.stopPropagation()}>
+                        <Image
+                            src={images[currentIndex]}
+                            alt={`${title} - Fullscreen`}
+                            fill
+                            sizes="100vw"
+                            className="object-contain"
+                            priority
+                        />
+                    </div>
                     
                     {images.length > 1 && (
                         <>
@@ -165,7 +174,7 @@ export default function ProductImageGallery({
                                     e.stopPropagation();
                                     prevImage(e);
                                 }}
-                                className="absolute left-2 md:left-6 top-1/2 -translate-y-1/2 p-2 md:p-4 text-white/50 hover:text-white transition-colors z-[10000] cursor-pointer"
+                                className="absolute left-2 md:left-6 top-1/2 -translate-y-1/2 p-2 md:p-4 text-white/50 hover:text-white transition-colors z-[1000000] cursor-pointer"
                                 aria-label="Previous image"
                             >
                                 <ChevronLeft className="w-10 h-10 md:w-14 md:h-14" />
@@ -175,14 +184,15 @@ export default function ProductImageGallery({
                                     e.stopPropagation();
                                     nextImage(e);
                                 }}
-                                className="absolute right-2 md:right-6 top-1/2 -translate-y-1/2 p-2 md:p-4 text-white/50 hover:text-white transition-colors z-[10000] cursor-pointer"
+                                className="absolute right-2 md:right-6 top-1/2 -translate-y-1/2 p-2 md:p-4 text-white/50 hover:text-white transition-colors z-[1000000] cursor-pointer"
                                 aria-label="Next image"
                             >
                                 <ChevronRight className="w-10 h-10 md:w-14 md:h-14" />
                             </button>
                         </>
                     )}
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     )

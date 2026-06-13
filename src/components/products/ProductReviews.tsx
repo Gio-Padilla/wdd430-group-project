@@ -250,10 +250,10 @@ export default function ProductReviews({ productId, initialReviews, sessionUser,
                                         <div className="w-10 h-10 rounded-full bg-[#2F4F4F] flex items-center justify-center text-white font-bold text-sm">
                                             {review.name?.charAt(0).toUpperCase()}
                                         </div>
-                                        <div>
-                                            <h3 className="font-semibold text-gray-900 text-sm flex items-center gap-2">
-                                                {review.name}
-                                                {isOwnReview && <span className="bg-[#2F4F4F]/10 text-[#2F4F4F] text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full font-bold">You</span>}
+                                        <div className="min-w-0">
+                                            <h3 className="font-semibold text-gray-900 text-sm flex flex-wrap items-center gap-2 break-words">
+                                                <span className="truncate">{review.name}</span>
+                                                {isOwnReview && <span className="bg-[#2F4F4F]/10 text-[#2F4F4F] text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full font-bold flex-shrink-0">You</span>}
                                             </h3>
                                             <p className="text-xs text-gray-400">
                                                 {new Date(review.created_at).toLocaleDateString("en-US", {
@@ -279,12 +279,12 @@ export default function ProductReviews({ productId, initialReviews, sessionUser,
                                     </div>
                                 </div>
 
-                                <p className="text-gray-700 leading-relaxed pl-13">
+                                <p className="text-gray-700 leading-relaxed pl-0 sm:pl-12 mt-2 sm:mt-0 break-words">
                                     {review.comment}
                                 </p>
 
                                 {isOwnReview && (
-                                    <div className="flex items-center gap-2 mt-4 pl-13">
+                                    <div className="flex flex-wrap items-center gap-2 mt-4 pl-0 sm:pl-12">
                                         <button 
                                             onClick={() => openEditModal(review)}
                                             className="text-xs font-semibold text-gray-500 hover:text-[#2F4F4F] flex items-center gap-1 transition-colors bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-md border border-gray-200"

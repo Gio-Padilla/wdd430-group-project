@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { LogOut, User as UserIcon, LayoutDashboard } from "lucide-react";
+import { LogOut, User as UserIcon, LayoutDashboard, Settings } from "lucide-react";
 import { logoutAction } from "@/lib/actions/auth";
 
 export default function UserMenu({ user }: { user: any }) {
@@ -43,7 +43,7 @@ export default function UserMenu({ user }: { user: any }) {
                             onClick={() => setIsOpen(false)}
                             className="flex items-center gap-2 px-4 py-3 text-sm font-bold text-[#2F4F4F] hover:bg-gray-100 transition"
                         >
-                            <UserIcon size={16} />
+                            <Settings size={16} />
                             Profile Settings
                         </Link>
                         <Link
