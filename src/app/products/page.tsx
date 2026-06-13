@@ -111,7 +111,7 @@ export default async function ProductsPage({
     }
 
     return (
-        <main className="p-6">
+        <main className="p-6 max-w-7xl mx-auto w-full">
             <h1 className="text-4xl font-bold mb-8">
                 Handmade Products
             </h1>

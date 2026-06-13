@@ -1,6 +1,6 @@
 export default function Loading() {
     return (
-        <main className="p-6 animate-pulse">
+        <main className="p-6 max-w-7xl mx-auto w-full animate-pulse">
             <div className="h-10 w-64 bg-gray-200 rounded-md mb-8"></div>
 
             {/* FilterBar Skeleton */}
