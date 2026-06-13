@@ -11,10 +11,18 @@ export default function ProductImageGallery({
     images: string[]
     title: string
 }) {
-    const [currentIndex, setCurrentIndex] = useState(0)
-    const [isZoomed, setIsZoomed] = useState(false)
-    const [zoomStyle, setZoomStyle] = useState<React.CSSProperties>({ transform: 'scale(1)' })
     const [isFullscreen, setIsFullscreen] = useState(false)
+
+    useEffect(() => {
+        if (isFullscreen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [isFullscreen]);
 
     if (!images || images.length === 0) {
         images = ["/products/placeholder.jpg"]
@@ -124,7 +132,7 @@ export default function ProductImageGallery({
             {/* Fullscreen Lightbox */}
             {isFullscreen && (
                 <div 
-                    className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center cursor-zoom-out"
+                    className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center cursor-zoom-out p-4 md:p-12"
                     onClick={() => setIsFullscreen(false)}
                 >
                     <button 
@@ -132,13 +140,13 @@ export default function ProductImageGallery({
                             e.stopPropagation();
                             setIsFullscreen(false);
                         }}
-                        className="absolute top-4 right-4 text-white hover:text-gray-300 p-2 text-3xl leading-none z-[110]"
+                        className="absolute top-4 right-4 text-white hover:text-[#F26419] p-2 text-4xl leading-none z-[110] transition-colors"
                         aria-label="Close fullscreen"
                     >
                         &times;
                     </button>
                     
-                    <div className="relative w-full h-full max-w-6xl max-h-[90vh] mx-4 flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+                    <div className="relative w-full h-full max-w-7xl mx-auto flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
                         <Image
                             src={images[currentIndex]}
                             alt={`${title} - Fullscreen`}
@@ -152,17 +160,17 @@ export default function ProductImageGallery({
                             <>
                                 <button
                                     onClick={prevImage}
-                                    className="absolute left-0 p-4 text-white/70 hover:text-white transition-colors z-[110] cursor-pointer"
+                                    className="absolute -left-4 md:left-0 top-1/2 -translate-y-1/2 p-4 text-white/50 hover:text-white transition-colors z-[110] cursor-pointer"
                                     aria-label="Previous image"
                                 >
-                                    <ChevronLeft className="w-10 h-10" />
+                                    <ChevronLeft className="w-10 h-10 md:w-14 md:h-14" />
                                 </button>
                                 <button
                                     onClick={nextImage}
-                                    className="absolute right-0 p-4 text-white/70 hover:text-white transition-colors z-[110] cursor-pointer"
+                                    className="absolute -right-4 md:right-0 top-1/2 -translate-y-1/2 p-4 text-white/50 hover:text-white transition-colors z-[110] cursor-pointer"
                                     aria-label="Next image"
                                 >
-                                    <ChevronRight className="w-10 h-10" />
+                                    <ChevronRight className="w-10 h-10 md:w-14 md:h-14" />
                                 </button>
                             </>
                         )}
