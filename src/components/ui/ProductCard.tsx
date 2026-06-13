@@ -4,6 +4,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { Star, Heart } from "lucide-react"
 import { useState } from "react"
+import { toast } from "react-hot-toast"
 
 type Product = {
     id: number
@@ -48,7 +49,7 @@ export default function ProductCard({
 
             setFavorited(data.action === "added")
         } catch (error) {
-            alert(
+            toast.error(
                 error instanceof Error
                     ? error.message
                     : "Error updating favorites"

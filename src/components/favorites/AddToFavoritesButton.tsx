@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Heart } from "lucide-react";
+import { toast } from "react-hot-toast";
 
 export default function AddToFavoritesButton({
     productId,
@@ -33,7 +34,7 @@ export default function AddToFavoritesButton({
 
             setFavorited(data.action === "added");
         } catch (error) {
-            alert(
+            toast.error(
                 error instanceof Error
                     ? error.message
                     : "Error updating favorites"

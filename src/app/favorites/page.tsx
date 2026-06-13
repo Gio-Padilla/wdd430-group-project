@@ -12,7 +12,7 @@ export default async function FavoritesPage() {
     const session = await auth();
 
     if (!session?.user) {
-        redirect("/account");
+        redirect("/account?error=favorites_login");
     }
 
     const userId = Number(session.user.id);
