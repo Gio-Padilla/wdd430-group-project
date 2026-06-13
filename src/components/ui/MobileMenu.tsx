@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, User, LogOut, LayoutDashboard, Home, ShoppingBag, Info, Phone, Heart } from "lucide-react";
+import { Menu, X, User, LogOut, LayoutDashboard, Home, ShoppingBag, Info, Phone, Heart, Settings } from "lucide-react";
 import { logoutAction } from "@/lib/actions/auth";
 
 interface NavLink {
@@ -107,14 +107,24 @@ export default function MobileMenu({ navLinks, user }: { navLinks: NavLink[], us
                 <div className="my-2 border-t border-gray-100 mx-5"></div>
 
                 {user?.email ? (
-                  <Link
-                    href={(user as any).role === "seller" ? "/dashboard" : "/my-account"}
-                    onClick={() => setIsOpen(false)}
-                    className="flex items-center gap-3.5 px-6 py-3.5 text-[#2F4F4F] hover:bg-gray-50 transition"
-                  >
-                    {(user as any).role === "seller" ? <LayoutDashboard size={18} className="text-[#2F4F4F]/70" /> : <User size={18} className="text-[#2F4F4F]/70" />}
-                    <span className="text-[15px]">{(user as any).role === "seller" ? "Dashboard" : "My Account"}</span>
-                  </Link>
+                  <>
+                    <Link
+                      href="/settings"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center gap-3.5 px-6 py-3.5 text-[#2F4F4F] hover:bg-gray-50 transition"
+                    >
+                      <Settings size={18} className="text-[#2F4F4F]/70" />
+                      <span className="text-[15px]">Profile Settings</span>
+                    </Link>
+                    <Link
+                      href={(user as any).role === "seller" ? "/dashboard" : "/my-account"}
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center gap-3.5 px-6 py-3.5 text-[#2F4F4F] hover:bg-gray-50 transition"
+                    >
+                      {(user as any).role === "seller" ? <LayoutDashboard size={18} className="text-[#2F4F4F]/70" /> : <User size={18} className="text-[#2F4F4F]/70" />}
+                      <span className="text-[15px]">{(user as any).role === "seller" ? "Dashboard" : "My Account"}</span>
+                    </Link>
+                  </>
                 ) : (
                   <Link
                     href="/account?mode=login"

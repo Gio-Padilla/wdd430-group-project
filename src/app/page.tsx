@@ -11,11 +11,11 @@ export default function Home() {
 
           {/* Left content of the hero */}
           <div>
-            <p className="mb-3 text-sm font-bold uppercase tracking-[0.3em] text-[#F26419]">
+            <p className="mb-3 text-xs sm:text-sm font-bold uppercase tracking-widest sm:tracking-[0.3em] text-[#F26419] break-words">
               Handmade • Artisan • Unique
             </p>
 
-            <h1 className="mb-6 text-5xl uppercase leading-tight tracking-wider text-[#2F4F4F] md:text-6xl">
+            <h1 className="mb-6 text-4xl sm:text-5xl md:text-6xl lg:text-7xl uppercase leading-tight tracking-wider text-[#2F4F4F] break-words">
               Handcrafted
               <br />
               Haven

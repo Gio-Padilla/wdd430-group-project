@@ -1,6 +1,7 @@
 import FilterBar from "@/components/ui/FilterBar";
 import { db } from "@/lib/db";
 import ProductGrid from "@/components/ui/ProductGrid";
+import Pagination from "@/components/ui/Pagination";
 import { auth } from "@/auth";
 
 export const dynamic = "force-dynamic";
@@ -11,6 +12,7 @@ type SearchParams = Promise<{
     maxPrice?: string;
     q?: string;
     minRating?: string;
+    page?: string;
 }>;
 
 const categoriesResult = await db.query(`
@@ -24,7 +26,11 @@ export default async function ProductsPage({
 }: {
     searchParams: SearchParams;
 }) {
-    const { category, minPrice, maxPrice, q, minRating } = await searchParams;
+    const { category, minPrice, maxPrice, q, minRating, page } = await searchParams;
+
+    const currentPage = Number(page) || 1;
+    const pageSize = 30;
+    const offset = (currentPage - 1) * pageSize;
 
     const session = await auth();
     let favoritedProductIds: number[] = [];
@@ -49,6 +55,7 @@ export default async function ProductsPage({
             p.avg_rating,
             p.review_count,
             c.name as category,
+            COUNT(*) OVER() as full_count,
             (
                 SELECT json_agg(url ORDER BY display_order)
                 FROM product_images
@@ -94,10 +101,18 @@ export default async function ProductsPage({
 
     query += ` ORDER BY p.created_at DESC`;
 
-    let products = [];
+    query += ` LIMIT $${paramCount} OFFSET $${paramCount + 1}`;
+    values.push(pageSize, offset);
+
+    let products: any[] = [];
+    let totalPages = 0;
 
     try {
         const { rows } = await db.query(query, values);
+        
+        if (rows.length > 0) {
+            totalPages = Math.ceil(parseInt(rows[0].full_count, 10) / pageSize);
+        }
 
         products = rows.map((product) => ({
             ...product,
@@ -111,8 +126,8 @@ export default async function ProductsPage({
     }
 
     return (
-        <main className="p-6">
-            <h1 className="text-4xl font-bold mb-8">
+        <main className="p-6 max-w-7xl mx-auto w-full">
+            <h1 className="text-4xl font-bold mb-8 text-[#2F4F4F] ">
                 Handmade Products
             </h1>
 
@@ -121,6 +136,12 @@ export default async function ProductsPage({
             />
 
             <ProductGrid products={products} />
+
+            {totalPages > 1 && (
+                <div className="mt-10 flex justify-center">
+                    <Pagination totalPages={totalPages} />
+                </div>
+            )}
 
         </main>
     );
