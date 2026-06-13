@@ -15,7 +15,6 @@ export default async function Header() {
       name: "About", 
       href: "/about",
       subLinks: [
-        { name: "Contact", href: "/contact" },
         { name: "Sellers", href: "/sellers" }
       ]
     },
@@ -25,7 +24,6 @@ export default async function Header() {
     { name: "Home", href: "/" },
     { name: "Products", href: "/products" },
     { name: "About", href: "/about" },
-    { name: "Contact", href: "/contact" },
     { name: "Sellers", href: "/sellers" },
     { name: "Favorites", href: "/favorites" },
   ];

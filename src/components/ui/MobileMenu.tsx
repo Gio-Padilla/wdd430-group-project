@@ -27,7 +27,6 @@ export default function MobileMenu({ navLinks, user }: { navLinks: NavLink[], us
       case "home": return <Home size={18} className={pathname === "/" ? "text-[#F26419]" : "text-[#2F4F4F]/70"} />;
       case "products": return <ShoppingBag size={18} className={pathname === "/products" ? "text-[#F26419]" : "text-[#2F4F4F]/70"} />;
       case "about": return <Info size={18} className={pathname === "/about" ? "text-[#F26419]" : "text-[#2F4F4F]/70"} />;
-      case "contact": return <Phone size={18} className={pathname === "/contact" ? "text-[#F26419]" : "text-[#2F4F4F]/70"} />;
       case "cart":
       case "favorites": return <Heart size={18} className={pathname === "/favorites" ? "text-red-500" : "text-[#2F4F4F]/70"} />;
       case "sellers": return <User size={18} className={pathname === "/sellers" ? "text-[#F26419]" : "text-[#2F4F4F]/70"} />;
