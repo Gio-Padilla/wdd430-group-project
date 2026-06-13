@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 
 export default function ProductImageGallery({
@@ -11,6 +11,9 @@ export default function ProductImageGallery({
     images: string[]
     title: string
 }) {
+    const [currentIndex, setCurrentIndex] = useState(0)
+    const [isZoomed, setIsZoomed] = useState(false)
+    const [zoomStyle, setZoomStyle] = useState<React.CSSProperties>({ transform: 'scale(1)' })
     const [isFullscreen, setIsFullscreen] = useState(false)
 
     useEffect(() => {
