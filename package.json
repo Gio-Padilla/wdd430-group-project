@@ -8,12 +8,13 @@
     "start": "next start",
     "lint": "eslint",
     "db:init": "node src/db/init.ts",
-    "db:seed": "node src/db/seed.js"
+    "db:seed": "node src/db/seed.js ; node src/db/seed2.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.10.0",
     "clsx": "^2.1.1",
+    "framer-motion": "^12.40.0",
     "jose": "^6.2.3",
     "lucide-react": "^1.16.0",
     "next": "16.2.6",

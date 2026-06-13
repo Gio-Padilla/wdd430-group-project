@@ -101,7 +101,7 @@ CREATE TABLE "order_items" (
     "unit_price" DECIMAL(10, 2) NOT NULL,
     
     CONSTRAINT "fk_order_items_order" FOREIGN KEY ("order_id") REFERENCES "orders"("id") ON DELETE CASCADE,
-    CONSTRAINT "fk_order_items_product" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE RESTRICT
+    CONSTRAINT "fk_order_items_product" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE CASCADE
 );
 
 -- 9. Create Reviews Table

@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { MapPin } from "lucide-react";
 import ProductGrid from "@/components/ui/ProductGrid";
 import { auth } from "@/auth";
-import { WhatsAppIcon, InstagramIcon, TikTokIcon, FacebookIcon } from "@/components/ui/SocialIcons";
+import { WhatsAppIcon, InstagramIcon, TikTokIcon, FacebookIcon, TwitterIcon, GlobeIcon } from "@/components/ui/SocialIcons";
 
 export const dynamic = "force-dynamic";
 
@@ -121,6 +121,7 @@ export default async function SellerPage(props: { params: Promise<{ id: string }
                                 src={seller.avatarUrl} 
                                 alt={`${seller.name}'s avatar`} 
                                 fill
+                                sizes="160px"
                                 className="object-cover" 
                             />
                         ) : (
@@ -170,6 +171,16 @@ export default async function SellerPage(props: { params: Promise<{ id: string }
                                 {seller.social_links.facebook && (
                                     <a href={seller.social_links.facebook} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#1877F2] transition-colors p-2 bg-gray-50 hover:bg-white rounded-full border border-transparent hover:border-gray-200 shadow-sm hover:shadow">
                                         <FacebookIcon className="w-5 h-5" />
+                                    </a>
+                                )}
+                                {seller.social_links.twitter && (
+                                    <a href={seller.social_links.twitter} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-black transition-colors p-2 bg-gray-50 hover:bg-white rounded-full border border-transparent hover:border-gray-200 shadow-sm hover:shadow">
+                                        <TwitterIcon className="w-5 h-5" />
+                                    </a>
+                                )}
+                                {seller.social_links.website && (
+                                    <a href={seller.social_links.website} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#2F4F4F] transition-colors p-2 bg-gray-50 hover:bg-white rounded-full border border-transparent hover:border-gray-200 shadow-sm hover:shadow">
+                                        <GlobeIcon className="w-5 h-5" />
                                     </a>
                                 )}
                             </div>

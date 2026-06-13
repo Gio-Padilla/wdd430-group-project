@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { MapPin, ArrowRight } from "lucide-react";
+import { InstagramIcon, FacebookIcon, TwitterIcon, GlobeIcon, WhatsAppIcon, TikTokIcon } from "@/components/ui/SocialIcons";
 
 type ArtisanProduct = {
     id: number;
@@ -14,6 +15,15 @@ type Artisan = {
     bio: string;
     location: string;
     avatarUrl: string | null;
+    bannerColor?: string | null;
+    socialLinks?: {
+        instagram?: string;
+        facebook?: string;
+        twitter?: string;
+        website?: string;
+        whatsapp?: string;
+        tiktok?: string;
+    } | null;
     products: ArtisanProduct[];
 };
 
@@ -21,7 +31,10 @@ export default function ArtisanCard({ artisan }: { artisan: Artisan }) {
     return (
         <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group">
             {/* Header / Avatar Section */}
-            <div className="relative h-24 sm:h-32 bg-gradient-to-r from-gray-100 to-gray-200">
+            <div 
+                className="relative h-24 sm:h-32 bg-gray-200" 
+                style={{ backgroundColor: artisan.bannerColor || undefined }}
+            >
                 <div className="absolute -bottom-10 left-6">
                     <div className="w-20 h-20 rounded-full border-4 border-white bg-white shadow-sm overflow-hidden relative">
                         {artisan.avatarUrl ? (
@@ -29,6 +42,7 @@ export default function ArtisanCard({ artisan }: { artisan: Artisan }) {
                                 src={artisan.avatarUrl}
                                 alt={artisan.name}
                                 fill
+                                sizes="80px"
                                 className="object-cover"
                             />
                         ) : (
@@ -44,9 +58,11 @@ export default function ArtisanCard({ artisan }: { artisan: Artisan }) {
             <div className="pt-12 px-6 pb-6 flex-1 flex flex-col">
                 <div className="flex items-start justify-between gap-4 mb-2">
                     <div>
-                        <h2 className="text-xl font-bold text-gray-900 group-hover:text-[#F26419] transition-colors">
-                            {artisan.name}
-                        </h2>
+                        <Link href={`/sellers/${artisan.id}`}>
+                            <h2 className="text-xl font-bold text-gray-900 group-hover:text-[#F26419] transition-colors">
+                                {artisan.name}
+                            </h2>
+                        </Link>
                         {artisan.location && (
                             <div className="flex items-center gap-1 text-sm text-gray-500 mt-1">
                                 <MapPin className="w-3.5 h-3.5" />
@@ -54,6 +70,40 @@ export default function ArtisanCard({ artisan }: { artisan: Artisan }) {
                             </div>
                         )}
                     </div>
+                    {artisan.socialLinks && (
+                        <div className="flex gap-2 text-gray-400">
+                            {artisan.socialLinks.instagram && (
+                                <a href={artisan.socialLinks.instagram} target="_blank" rel="noreferrer" className="hover:text-[#F26419]">
+                                    <InstagramIcon className="w-5 h-5 sm:w-4 sm:h-4" />
+                                </a>
+                            )}
+                            {artisan.socialLinks.whatsapp && (
+                                <a href={artisan.socialLinks.whatsapp} target="_blank" rel="noreferrer" className="hover:text-[#F26419]">
+                                    <WhatsAppIcon className="w-5 h-5 sm:w-4 sm:h-4" />
+                                </a>
+                            )}
+                            {artisan.socialLinks.tiktok && (
+                                <a href={artisan.socialLinks.tiktok} target="_blank" rel="noreferrer" className="hover:text-[#F26419]">
+                                    <TikTokIcon className="w-5 h-5 sm:w-4 sm:h-4" />
+                                </a>
+                            )}
+                            {artisan.socialLinks.facebook && (
+                                <a href={artisan.socialLinks.facebook} target="_blank" rel="noreferrer" className="hover:text-[#F26419]">
+                                    <FacebookIcon className="w-5 h-5 sm:w-4 sm:h-4" />
+                                </a>
+                            )}
+                            {artisan.socialLinks.twitter && (
+                                <a href={artisan.socialLinks.twitter} target="_blank" rel="noreferrer" className="hover:text-[#F26419]">
+                                    <TwitterIcon className="w-5 h-5 sm:w-4 sm:h-4" />
+                                </a>
+                            )}
+                            {artisan.socialLinks.website && (
+                                <a href={artisan.socialLinks.website} target="_blank" rel="noreferrer" className="hover:text-[#F26419]">
+                                    <GlobeIcon className="w-5 h-5 sm:w-4 sm:h-4" />
+                                </a>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 <p className="text-sm text-gray-600 line-clamp-2 mt-2 leading-relaxed">

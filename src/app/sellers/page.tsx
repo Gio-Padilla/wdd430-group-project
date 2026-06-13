@@ -16,7 +16,7 @@ async function getSellers(page: number, limit: number) {
         
         // 2. Get paginated sellers
         const sellersResult = await db.query(
-            `SELECT id, name, bio, location, avatar_url AS "avatarUrl" 
+            `SELECT id, name, bio, location, avatar_url AS "avatarUrl", banner_color AS "bannerColor", social_links AS "socialLinks" 
              FROM "users" 
              WHERE role = 'seller' 
              ORDER BY name ASC 
@@ -124,6 +124,26 @@ export default async function SellersPage(props: { searchParams: Promise<{ page?
                         )}
                     </>
                 )}
+            </div>
+
+            {/* CTA Section */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-24">
+                <div className="bg-[#2F4F4F] rounded-3xl p-10 sm:p-16 text-center text-white relative overflow-hidden">
+                    <div className="relative z-10">
+                        <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+                            Are you a passionate artisan?
+                        </h2>
+                        <p className="text-lg text-gray-300 max-w-2xl mx-auto mb-8">
+                            Join our community of talented creators and start selling your handcrafted goods to people who appreciate quality and artistry.
+                        </p>
+                        <a 
+                            href="/account?mode=signup&role=sell"
+                            className="inline-flex items-center justify-center px-8 py-4 text-lg font-bold rounded-xl bg-[#F26419] hover:bg-[#d95611] text-white transition-colors duration-300"
+                        >
+                            Become a Seller Today
+                        </a>
+                    </div>
+                </div>
             </div>
         </main>
     );

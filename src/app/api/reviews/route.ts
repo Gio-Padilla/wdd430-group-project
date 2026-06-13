@@ -26,10 +26,28 @@ export async function DELETE(request: Request) {
         const query = `
             DELETE FROM "reviews" 
             WHERE "user_id" = $1 AND "id" IN (${placeholders})
-            RETURNING id
+            RETURNING id, product_id
         `;
 
         const result = await db.query(query, params);
+
+        if (result.rowCount && result.rowCount > 0) {
+            const productIds = [...new Set(result.rows.map(row => row.product_id))];
+            
+            for (const pId of productIds) {
+                await db.query(`
+                    UPDATE "products" 
+                    SET 
+                        "review_count" = (SELECT COUNT(*) FROM "reviews" WHERE "product_id" = $1),
+                        "avg_rating" = COALESCE((
+                            SELECT ROUND(AVG(rating)::numeric, 1) 
+                            FROM "reviews" 
+                            WHERE "product_id" = $1
+                        ), 0)
+                    WHERE "id" = $1
+                `, [pId]);
+            }
+        }
 
         return NextResponse.json({ success: true, deletedCount: result.rowCount });
     } catch (error: any) {
@@ -67,6 +85,20 @@ export async function PUT(request: Request) {
         if (result.rowCount === 0) {
             return new NextResponse("Review not found or unauthorized", { status: 404 });
         }
+
+        const productId = result.rows[0].product_id;
+
+        await db.query(`
+            UPDATE "products" 
+            SET 
+                "review_count" = (SELECT COUNT(*) FROM "reviews" WHERE "product_id" = $1),
+                "avg_rating" = COALESCE((
+                    SELECT ROUND(AVG(rating)::numeric, 1) 
+                    FROM "reviews" 
+                    WHERE "product_id" = $1
+                ), 0)
+            WHERE "id" = $1
+        `, [productId]);
 
         return NextResponse.json({ success: true, review: result.rows[0] });
     } catch (error: any) {

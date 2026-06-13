@@ -39,6 +39,7 @@ export const metadata: Metadata = {
 };
 
 import { Toaster } from 'react-hot-toast';
+import PageTransition from "@/components/ui/PageTransition";
 
 export default function RootLayout({
   children,
@@ -62,7 +63,9 @@ export default function RootLayout({
           <GlobalToast />
           <Header />
 
-          <main className="flex-1">{children}</main>
+          <main className="flex-1">
+            <PageTransition>{children}</PageTransition>
+          </main>
 
           <Footer />
         </ToastProvider>

@@ -107,7 +107,9 @@ export default async function DashboardProductsPage(props: { searchParams: Promi
                           )}
                         </div>
                         <div className="min-w-0">
-                          <div className="font-semibold text-gray-900 text-xs sm:text-base line-clamp-2">{product.title}</div>
+                          <Link href={`/products/${product.id}`} className="font-semibold text-gray-900 text-xs sm:text-base line-clamp-2 hover:text-primary transition-colors">
+                            {product.title}
+                          </Link>
                           <div className="text-[10px] sm:text-xs text-gray-400 font-medium mt-0.5">SKU: {String(product.id).padStart(6, '0')}</div>
                         </div>
                       </div>
