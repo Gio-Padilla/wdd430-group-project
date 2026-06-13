@@ -14,6 +14,7 @@ export default function ProductImageGallery({
     const [currentIndex, setCurrentIndex] = useState(0)
     const [isZoomed, setIsZoomed] = useState(false)
     const [zoomStyle, setZoomStyle] = useState<React.CSSProperties>({ transform: 'scale(1)' })
+    const [isFullscreen, setIsFullscreen] = useState(false)
 
     if (!images || images.length === 0) {
         images = ["/products/placeholder.jpg"]
@@ -30,6 +31,7 @@ export default function ProductImageGallery({
     }
 
     const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (isFullscreen) return;
         const { left, top, width, height } = e.currentTarget.getBoundingClientRect()
         const x = ((e.clientX - left) / width) * 100
         const y = ((e.clientY - top) / height) * 100
@@ -39,7 +41,10 @@ export default function ProductImageGallery({
         })
     }
 
-    const handleMouseEnter = () => setIsZoomed(true)
+    const handleMouseEnter = () => {
+        if (!isFullscreen) setIsZoomed(true)
+    }
+    
     const handleMouseLeave = () => {
         setIsZoomed(false)
         setZoomStyle({ transform: 'scale(1)', transformOrigin: 'center center' })
@@ -49,10 +54,15 @@ export default function ProductImageGallery({
         <div className="flex flex-col gap-3 w-full">
             {/* Main Image */}
             <div 
-                className="relative w-full aspect-[4/3] max-h-[400px] bg-gray-50 rounded-xl overflow-hidden group border border-gray-100 shadow-sm cursor-crosshair"
+                className="relative w-full aspect-[4/3] max-h-[400px] bg-gray-50 rounded-xl overflow-hidden group border border-gray-100 shadow-sm cursor-zoom-in"
                 onMouseMove={handleMouseMove}
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
+                onClick={() => {
+                    setIsFullscreen(true)
+                    setIsZoomed(false)
+                    setZoomStyle({ transform: 'scale(1)' })
+                }}
             >
                 <Image
                     src={images[currentIndex]}
@@ -108,6 +118,55 @@ export default function ProductImageGallery({
                             />
                         </button>
                     ))}
+                </div>
+            )}
+
+            {/* Fullscreen Lightbox */}
+            {isFullscreen && (
+                <div 
+                    className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center cursor-zoom-out"
+                    onClick={() => setIsFullscreen(false)}
+                >
+                    <button 
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setIsFullscreen(false);
+                        }}
+                        className="absolute top-4 right-4 text-white hover:text-gray-300 p-2 text-3xl leading-none z-[110]"
+                        aria-label="Close fullscreen"
+                    >
+                        &times;
+                    </button>
+                    
+                    <div className="relative w-full h-full max-w-6xl max-h-[90vh] mx-4 flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+                        <Image
+                            src={images[currentIndex]}
+                            alt={`${title} - Fullscreen`}
+                            fill
+                            sizes="100vw"
+                            className="object-contain"
+                            priority
+                        />
+                        
+                        {images.length > 1 && (
+                            <>
+                                <button
+                                    onClick={prevImage}
+                                    className="absolute left-0 p-4 text-white/70 hover:text-white transition-colors z-[110] cursor-pointer"
+                                    aria-label="Previous image"
+                                >
+                                    <ChevronLeft className="w-10 h-10" />
+                                </button>
+                                <button
+                                    onClick={nextImage}
+                                    className="absolute right-0 p-4 text-white/70 hover:text-white transition-colors z-[110] cursor-pointer"
+                                    aria-label="Next image"
+                                >
+                                    <ChevronRight className="w-10 h-10" />
+                                </button>
+                            </>
+                        )}
+                    </div>
                 </div>
             )}
         </div>
