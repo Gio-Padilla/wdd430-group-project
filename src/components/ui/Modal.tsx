@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
 type ModalProps = {
@@ -14,6 +15,11 @@ type ModalProps = {
 
 export default function Modal({ isOpen, onClose, title, description, children, actionButton }: ModalProps) {
     const dialogRef = useRef<HTMLDialogElement>(null);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     useEffect(() => {
         const dialog = dialogRef.current;
@@ -24,14 +30,14 @@ export default function Modal({ isOpen, onClose, title, description, children, a
         } else if (!isOpen && dialog.open) {
             dialog.close();
         }
-    }, [isOpen]);
+    }, [isOpen, mounted]);
 
     if (!isOpen) return null;
 
-    return (
+    const modalContent = (
         <dialog
             ref={dialogRef}
-            className="backdrop:bg-black/40 backdrop:backdrop-blur-sm bg-white rounded-2xl shadow-xl w-full max-w-md p-0 m-auto open:animate-in open:fade-in-90 open:zoom-in-95 border border-gray-200"
+            className="backdrop:bg-black/40 backdrop:backdrop-blur-sm bg-white rounded-2xl shadow-xl w-[90%] max-w-md p-0 m-auto open:animate-in open:fade-in-90 open:zoom-in-95 border border-gray-200"
             onClose={onClose}
         >
             <div className="p-6">
@@ -64,4 +70,6 @@ export default function Modal({ isOpen, onClose, title, description, children, a
             </div>
         </dialog>
     );
+
+    return mounted ? createPortal(modalContent, document.body) : null;
 }
