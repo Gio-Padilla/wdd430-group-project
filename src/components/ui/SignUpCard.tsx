@@ -12,6 +12,7 @@ export default function SignUpCard({ accountType, setAccountType }: { accountTyp
     const [confirmPassword, setConfirmPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleSignUp = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -21,14 +22,17 @@ export default function SignUpCard({ accountType, setAccountType }: { accountTyp
             return;
         }
 
+        setIsLoading(true);
         const result = await registerAction({ email, password, fullName, accountType });
         if (result?.error) {
             showToast(result.error, 'error');
+            setIsLoading(false);
             return;
         }
 
         // Auto login after successful registration
         const loginResult = await loginAction({ email, password });
+        setIsLoading(false);
         if (loginResult?.error) {
             showToast(loginResult.error, 'error');
         } else {
@@ -88,6 +92,7 @@ export default function SignUpCard({ accountType, setAccountType }: { accountTyp
                             placeholder="Your full name"
                             className="bg-background px-8 py-2 border-b border-gray-400 text-gray-900 font-medium placeholder:text-gray-500 focus:border-primary outline-none transition-colors w-full"
                             required
+                            minLength={2}
                         />
                     </div>
                 </div>
@@ -105,6 +110,8 @@ export default function SignUpCard({ accountType, setAccountType }: { accountTyp
                             placeholder="you@example.com"
                             className="bg-background px-8 py-2 border-b border-gray-400 text-gray-900 font-medium placeholder:text-gray-500 focus:border-primary outline-none transition-colors w-full"
                             required
+                            pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                            title="Please enter a valid email address."
                         />
                     </div>
                 </div>
@@ -119,9 +126,10 @@ export default function SignUpCard({ accountType, setAccountType }: { accountTyp
                             name="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Create a strong password"
+                            placeholder="Create a strong password (min 6 chars)"
                             className="bg-background px-8 py-2 border-b border-gray-400 text-gray-900 font-medium placeholder:text-gray-500 focus:border-primary outline-none transition-colors w-full pr-8"
                             required
+                            minLength={6}
                         />
                         <button
                             type="button"
@@ -146,6 +154,7 @@ export default function SignUpCard({ accountType, setAccountType }: { accountTyp
                             placeholder="Confirm your password"
                             className="bg-background px-8 py-2 border-b border-gray-400 text-gray-900 font-medium placeholder:text-gray-500 focus:border-primary outline-none transition-colors w-full pr-8"
                             required
+                            minLength={6}
                         />
                         <button
                             type="button"
@@ -157,7 +166,20 @@ export default function SignUpCard({ accountType, setAccountType }: { accountTyp
                     </div>
                 </div>
 
-                <input type="submit" value="Create Account" className="bg-primary text-background font-semibold hover:bg-primary/90 px-4 py-3 rounded-md cursor-pointer mt-2 transition-colors" />
+                <button 
+                    type="submit" 
+                    disabled={isLoading}
+                    className="flex justify-center items-center gap-2 bg-primary text-background font-semibold hover:bg-primary/90 px-4 py-3 rounded-md cursor-pointer mt-2 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                    {isLoading ? (
+                        <>
+                            <span className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                            Creating Account...
+                        </>
+                    ) : (
+                        "Create Account"
+                    )}
+                </button>
             </form>
         </div>
     )

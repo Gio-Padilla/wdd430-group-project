@@ -65,14 +65,14 @@ export default async function Header() {
           <Link href="/favorites" className="relative p-2 text-[#2F4F4F] hover:text-red-500 transition cursor-pointer" aria-label="Favorites">
             <Heart className="w-6 h-6" />
           </Link>
-          {session ? (
+          {session?.user?.email ? (
             <UserMenu user={session.user} />
           ) : (
             <Link
               href="/account?mode=login"
               className="rounded-lg border-2 border-black bg-[#2F4F4F] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#F26419] hover:shadow-md cursor-pointer"
             >
-              Account
+              Sign in
             </Link>
           )}
         </div>

@@ -10,11 +10,15 @@ export default function SignInCard() {
     const [password, setPassword] = useState("");
     const [email, setEmail] = useState("");
     const [showPassword, setShowPassword] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         
+        setIsLoading(true);
         const result = await loginAction({ email, password });
+        setIsLoading(false);
+
         if (result?.error) {
             showToast(result.error, 'error');
         } else {
@@ -43,6 +47,8 @@ export default function SignInCard() {
                             className="bg-background px-8 py-2 border-b border-gray-400 text-gray-900 font-medium placeholder:text-gray-500 focus:border-primary outline-none transition-colors w-full"
                             required
                             autoComplete="email"
+                            pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                            title="Please enter a valid email address."
                         />
                     </div>
                 </div>
@@ -60,6 +66,7 @@ export default function SignInCard() {
                             className="bg-background px-8 py-2 border-b border-gray-400 text-gray-900 font-medium placeholder:text-gray-500 focus:border-primary outline-none transition-colors w-full pr-10"
                             required
                             autoComplete="current-password"
+                            minLength={6}
                         />
                         <button
                             type="button"
@@ -70,7 +77,20 @@ export default function SignInCard() {
                         </button>
                     </div>
                 </div>
-                <input type="submit" value="Sign In" className="bg-primary text-background font-semibold hover:bg-primary/90 px-4 py-3 rounded-md cursor-pointer transition-colors" />
+                <button 
+                    type="submit" 
+                    disabled={isLoading}
+                    className="flex justify-center items-center gap-2 bg-primary text-background font-semibold hover:bg-primary/90 px-4 py-3 rounded-md cursor-pointer transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                    {isLoading ? (
+                        <>
+                            <span className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                            Signing In...
+                        </>
+                    ) : (
+                        "Sign In"
+                    )}
+                </button>
             </form>
             {/* forgot password */}
             <div className="text-sm text-center">

@@ -2,9 +2,9 @@ import { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Your App Name',
-    short_name: 'App',
-    description: 'Your application description',
+    name: 'Handcrafted Haven',
+    short_name: 'HH',
+    description: 'Find unique, handmade goods from talented artisans. Shop, sell, and discover handcrafted treasures.',
     start_url: '/',
     display: 'standalone',
     background_color: '#ffffff',

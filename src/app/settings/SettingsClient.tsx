@@ -91,11 +91,12 @@ export default function SettingsClient({ user }: { user: any }) {
         setIsDeleting(true);
         const toastId = toast.loading("Deleting account...");
 
+        let success = false;
         try {
             const res = await fetch("/api/profile", { method: "DELETE" });
             if (res.ok) {
                 toast.success("Account deleted successfully.", { id: toastId });
-                await logoutAction();
+                success = true;
             } else {
                 toast.error("Failed to delete account", { id: toastId });
                 setIsDeleting(false);
@@ -104,6 +105,10 @@ export default function SettingsClient({ user }: { user: any }) {
             console.error(err);
             toast.error("Error deleting account", { id: toastId });
             setIsDeleting(false);
+        }
+
+        if (success) {
+            await logoutAction();
         }
     };
 

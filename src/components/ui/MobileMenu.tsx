@@ -72,7 +72,7 @@ export default function MobileMenu({ navLinks, user }: { navLinks: NavLink[], us
             </div>
 
             {/* User Profile Block */}
-            {user && (
+            {user?.email && (
               <div className="bg-white px-5 py-5 border-b border-gray-100 flex items-center gap-3">
                 <div className="flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-full bg-[#2F4F4F] text-white text-xl font-bold shadow-sm">
                   {user.name?.charAt(0).toUpperCase() || "U"}
@@ -106,7 +106,7 @@ export default function MobileMenu({ navLinks, user }: { navLinks: NavLink[], us
                 
                 <div className="my-2 border-t border-gray-100 mx-5"></div>
 
-                {user ? (
+                {user?.email ? (
                   <Link
                     href={(user as any).role === "seller" ? "/dashboard" : "/my-account"}
                     onClick={() => setIsOpen(false)}
@@ -129,12 +129,16 @@ export default function MobileMenu({ navLinks, user }: { navLinks: NavLink[], us
             </div>
 
             {/* Footer Action */}
-            {user && (
+            {user?.email && (
               <div className="border-t border-gray-100 p-2 pb-5">
                 <button
                   onClick={async () => {
                     setIsOpen(false);
-                    await logoutAction();
+                    try {
+                      await logoutAction();
+                    } catch (e) {
+                      throw e;
+                    }
                   }}
                   className="flex items-center gap-3.5 w-full px-4 py-3 text-[#F26419] hover:bg-[#F26419]/5 rounded-lg transition"
                 >
