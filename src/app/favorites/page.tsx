@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Heart, ShoppingBag, ArrowRight } from "lucide-react";
 import RemoveFromFavoritesButton from "@/components/favorites/RemoveFromFavoritesButton";
+import CheckoutBtn from "@/components/checkout/checkoutBtn";
 
 export const dynamic = "force-dynamic";
 
@@ -43,10 +44,11 @@ export default async function FavoritesPage() {
     }));
 
     return (
-        <main className="bg-gray-50 min-h-screen pb-16">
+        <main className="bg-gray-50 min-h-screen pb-16 ">
             
             {/* Elegant Header */}
-            <div className="bg-[#2F4F4F] pt-16 pb-24 px-4 sm:px-6 lg:px-8 text-center relative overflow-hidden">
+            <div className="bg-[#2F4F4F] pt-16 pb-24 px-4 sm:px-6 lg:px-8 text-center relative overflow-hidden relative">
+                <CheckoutBtn/>
                 <div className="absolute inset-0 opacity-10 bg-[url('/noise.png')] mix-blend-overlay"></div>
                 <div className="relative z-10 max-w-3xl mx-auto">
                     <div className="inline-flex items-center justify-center p-3 bg-white/10 rounded-2xl backdrop-blur-md mb-6 shadow-xl border border-white/20">

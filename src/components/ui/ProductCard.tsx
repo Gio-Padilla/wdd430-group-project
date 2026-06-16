@@ -59,7 +59,7 @@ export default function ProductCard({
     }
 
     return (
-        <Link href={`/products/${product.id}`} className="group">
+        <Link href={`/products/${product.id}`} className="group relative">
             <div className="bg-white rounded-xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-lg hover:border-gray-300 transition-all duration-300 relative">
 
                     {/* Image */}
@@ -120,6 +120,7 @@ export default function ProductCard({
                 </div>
 
             </div>
+          
         </Link>
     )
 }
